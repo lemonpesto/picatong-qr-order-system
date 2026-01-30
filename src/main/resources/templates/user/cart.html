@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>장바구니</title>
+
+    <link rel="stylesheet" href="/css/main.css" />
+    <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+<!-- nav include -->
+<div th:replace="fragments/nav :: nav(${navTitle}, ${navBack}, ${tableNum})"></div>
+
+<!-- 빈 장바구니 -->
+<div th:if="${#lists.isEmpty(cartItems)}" class="cart-section">
+    <div class="inline-action">
+        <p class="cart-notice">장바구니가 비었습니다.</p>
+        <a th:href="@{/items}" id="menu-btn" class="outline-button inline-button">메뉴 보기</a>
+    </div>
+</div>
+
+<!-- 장바구니 리스트 -->
+<div th:if="${!#lists.isEmpty(cartItems)}" class="cart-section">
+    <!-- 안내 문구 -->
+    <h3 class="total-qty">
+        선택한 메뉴
+        <span th:text="${summary.totalQuantity}">0</span>개
+    </h3>
+
+    <div th:each="ci, stat : ${cartItems}">
+        <div
+            class="cart-items list-box"
+            th:attr="
+                data-itemid=${ci.item.id},
+                data-name=${ci.item.name},
+                data-price=${ci.item.price}
+            "
+        >
+            <div class="menu-info">
+                <h4 th:text="${ci.item.name}">메뉴명</h4>
+                <p class="price">
+                    <span th:text="${#numbers.formatInteger(ci.item.price, 0, 'COMMA')}">0</span>원
+                </p>
+
+                <!-- description 있으면 표시 -->
+                <span
+                    th:if="${ci.item.description != null and !#strings.isEmpty(ci.item.description)}"
+                    class="subtext comment"
+                    th:text="${ci.item.description}"
+                >설명</span>
+            </div>
+
+            <div class="cart-item qty-control">
+                <button type="button" class="qty-btn minus" th:attr="data-itemid=${ci.item.id}">
+                    <i class="fa-regular fa-trash-can fa-2xs"></i>
+                    <span class="minus-text" style="display: none">
+                        <i class="fa-solid fa-minus fa-2xs"></i>
+                    </span>
+                </button>
+
+                <span class="qty" th:attr="data-itemid=${ci.item.id}" th:text="${ci.quantity}">1</span>
+
+                <button type="button" class="qty-btn plus" th:attr="data-itemid=${ci.item.id}">
+                    <i class="fa-solid fa-plus fa-2xs"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- divider (마지막 아이템이 아니면) -->
+        <div th:unless="${stat.last}" class="menu-divider"></div>
+    </div>
+</div>
+
+<div th:if="${!#lists.isEmpty(cartItems)}" class="section-divider"></div>
+<div id="toast" class="toast-msg"></div>
+
+<!-- 주문하기 버튼 (장바구니 비었으면 숨김) -->
+<div th:if="${!#lists.isEmpty(cartItems)}" class="bottom-bar">
+    <a th:href="@{/payment}" id="order" class="bottom-button">
+        총 <span th:text="${#numbers.formatInteger(summary.totalAmount, 0, 'COMMA')}">0</span>원
+        주문하기
+    </a>
+</div>
+
+<script>
+    const toastEl = document.getElementById("toast");
+    function toast(msg) {
+        if (!toastEl) return;
+        toastEl.textContent = msg;
+        toastEl.classList.add("show");
+        setTimeout(() => toastEl.classList.remove("show"), 1500);
+    }
+
+    async function refreshSummary() {
+        try {
+            const res = await fetch("/cart/summary");
+            if (!res.ok) return;
+            const summary = await res.json(); // { totalQuantity, totalAmount }
+
+            const totalQtyEl = document.querySelector(".total-qty span");
+            if (totalQtyEl) totalQtyEl.textContent = summary.totalQuantity;
+
+            const orderBtn = document.getElementById("order");
+            if (orderBtn) {
+                const priceSpan = orderBtn.querySelector("span");
+                if (priceSpan) {
+                    priceSpan.textContent = Number(summary.totalAmount).toLocaleString();
+                }
+            }
+        } catch (err) {
+            console.error("요약 정보 갱신 실패:", err);
+        }
+    }
+
+    async function updateQty(itemId, qty) {
+        const res = await fetch(`/cart/update?itemId=${encodeURIComponent(itemId)}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ qty }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        await refreshSummary();
+    }
+
+    async function deleteItem(itemId) {
+        const res = await fetch(`/cart/delete?itemId=${encodeURIComponent(itemId)}`, {
+            method: "DELETE",
+        });
+        if (!res.ok) throw new Error(await res.text());
+        await refreshSummary();
+    }
+
+    function removeRow(itemId) {
+        const row = document.querySelector(`.cart-items[data-itemid="${itemId}"]`);
+        if (row && row.parentElement) {
+            // 부모 div (아이템+divider 감싼 것)를 제거
+            row.parentElement.remove();
+        }
+    }
+
+    // + / - 버튼 핸들러
+    document.addEventListener("click", async (e) => {
+        const plusBtn = e.target.closest(".qty-btn.plus");
+        const minusBtn = e.target.closest(".qty-btn.minus");
+        if (!plusBtn && !minusBtn) return;
+
+        const itemId = (plusBtn || minusBtn).getAttribute("data-itemid");
+        const qtySpan = document.querySelector(`.qty[data-itemid="${itemId}"]`);
+        const current = Number(qtySpan?.textContent || "0");
+
+        try {
+            if (plusBtn) {
+                const next = current + 1;
+                await updateQty(itemId, next);
+                toast("수량이 변경되었습니다.");
+                if (qtySpan) qtySpan.textContent = String(next);
+            } else {
+                // 1이면 삭제, 아니면 -1
+                if (current <= 1) {
+                    await deleteItem(itemId);
+                    removeRow(itemId);
+                    toast("아이템이 삭제되었습니다.");
+                } else {
+                    const next = current - 1;
+                    await updateQty(itemId, next);
+                    toast("수량이 변경되었습니다.");
+                    if (qtySpan) qtySpan.textContent = String(next);
+                }
+            }
+        } catch (err) {
+            toast(err?.message || "처리 중 오류가 발생했습니다.");
+        }
+
+        // 비었으면 페이지 새로고침
+        const remain = document.querySelectorAll(".cart-items.list-box").length;
+        if (remain === 0) {
+            window.location.reload();
+        }
+    });
+
+    // bottom-bar sticky/fixed
+    window.addEventListener("DOMContentLoaded", () => {
+        const bar = document.querySelector(".bottom-bar");
+        if (!bar) return;
+
+        const isScrollable = document.body.scrollHeight > window.innerHeight;
+        bar.style.position = isScrollable ? "sticky" : "fixed";
+    });
+
+    window.addEventListener("resize", () => {
+        const bar = document.querySelector(".bottom-bar");
+        if (!bar) return;
+        bar.style.position = document.body.scrollHeight > window.innerHeight ? "sticky" : "fixed";
+    });
+</script>
+</body>
+</html>
