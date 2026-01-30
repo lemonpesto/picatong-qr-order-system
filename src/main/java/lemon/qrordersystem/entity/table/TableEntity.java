@@ -1,4 +1,4 @@
-package lemon.qrordersystem.entity;
+package lemon.qrordersystem.entity.table;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

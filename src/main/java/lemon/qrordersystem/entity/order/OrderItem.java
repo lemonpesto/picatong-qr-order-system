@@ -1,14 +1,14 @@
-package lemon.qrordersystem.entity;
+package lemon.qrordersystem.entity.order;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lemon.qrordersystem.entity.item.Item;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "order_item")
+@Table(name = "orders_item")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,7 +30,7 @@ public class OrderItem {
     private Item item;
 
     private int orderPrice; // 주문 당시 가격
-    private int count; // 주문 수량
+    private int quantity; // 주문 수량
 
     public void setOrder(Order order) {
         this.order = order;
