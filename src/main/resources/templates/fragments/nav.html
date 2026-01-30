@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- fragments/nav.html -->
+<nav class="nav" th:fragment="nav(navTitle, navBack, tableNum)">
+    <!-- navBack이 있으면: 뒤로가기 + 타이틀 -->
+    <div class="nav-left" th:if="${navBack != null}">
+        <a th:href="${navBack}" class="logo back-link">
+            <i class="fa-solid fa-chevron-left"></i>
+        </a>
+        <span class="nav-title" th:text="${navTitle}">장바구니</span>
+    </div>
+
+    <!-- navBack은 없고 navTitle만 있으면: 타이틀만 -->
+    <span class="nav-title" th:if="${navBack == null and navTitle != null}" th:text="${navTitle}">
+        피카통
+      </span>
+
+    <!-- navTitle도 없으면: 기본 로고 -->
+    <a th:if="${navBack == null and navTitle == null}" href="/user/items" class="logo">피카통</a>
+
+    <div class="nav-right">
+        <span class="table-label" th:text="'T' + ${tableNum}">T1</span>
+        <a href="/orders/history">주문내역</a>
+    </div>
+</nav>
+</body>
+</html>

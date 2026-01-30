@@ -1,0 +1,604 @@
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local("Pretendard Regular"), local("Pretendard-Regular"), url("/fonts/Pretendard-Regular.woff2") format("woff2"), url("/fonts/Pretendard-Regular.woff") format("woff"),
+    url("/fonts/Pretendard-Regular.ttf") format("truetype");
+}
+
+/* 전역 폰트 설정 */
+body,
+input,
+button,
+textarea {
+  font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+* {
+  -webkit-text-size-adjust: none;
+}
+body {
+  margin: 0;
+}
+a {
+  text-decoration-line: none;
+  color: #222;
+}
+/* .nav {
+  position: sticky;
+  top: 0;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  background: #fff;
+  font-weight: 600;
+} */
+
+.nav {
+  padding-top: env(safe-area-inset-top);
+  position: sticky;
+  top: 0;
+  height: 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 15px;
+  background: white;
+  font-weight: 600;
+  z-index: 999;
+}
+
+.logo {
+  font-size: 18px;
+}
+
+/* 뒤로가기 + 제목 */
+.nav-left {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+}
+
+.back-link .fa-chevron-left {
+  font-size: 18px;
+}
+
+.nav-title {
+  font-size: 18px;
+  margin-left: 6px;
+}
+
+/* 오른쪽 영역 */
+.nav-right {
+  display: flex;
+  align-items: center;
+}
+
+.table-label {
+  margin-right: 10px;
+  font-size: 16px;
+}
+
+.highlight {
+  color: #ff8c00;
+}
+
+.grey-bg {
+  background: #f2f2f2;
+}
+.white-bg {
+  background: white;
+  margin: 20px;
+  border-radius: 5px;
+}
+
+.category-bar {
+  position: sticky;
+  top: 50px;
+  z-index: 9;
+  display: flex;
+  gap: 10px;
+  padding: 10px 15px;
+  background: #fff;
+  overflow-x: auto;
+}
+.category-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.category-button {
+  padding: 7px 15px;
+  border: none;
+  border-radius: 20px;
+  background: #f2f2f2;
+  color: #737373;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+  white-space: nowrap;
+}
+
+.category-button.active {
+  background: #222;
+  color: white;
+}
+
+.menu-section,
+.payment-container,
+.confirm-container {
+  background: white;
+  padding: 8px 15px 0;
+}
+
+.callout-container {
+  margin: 12px; /* 카테고리 바와 메뉴 사이 간격 */
+}
+
+.menu-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #fff7e9; /* 연한 주황 */
+  border-radius: 2px;
+  padding: 12px 8px;
+  margin-top: 8px;
+  font-size: 14px;
+  color: #222;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(255, 140, 0, 0.05);
+}
+
+.menu-callout .callout-icon {
+  color: #ff9800;
+  font-size: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.menu-callout .callout-text {
+  line-height: 1.5;
+}
+
+.cart-section,
+.confirm-success-container,
+.confirm-cancel-container {
+  padding: 20px 10px 0;
+}
+
+.payment-container,
+.confirm-container {
+  margin-top: 10vh;
+  display: flex;
+  flex-direction: column; /* 위아래 배치 */
+  align-items: center; /* 가로 중앙 정렬 */
+  text-align: center; /* 텍스트 가운데 정렬 */
+}
+
+.menu-section h3,
+.cart-section h3,
+.payment-container h3,
+.confirm-container h3 {
+  margin: 0 5px;
+  padding: 10px 0 5px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.payment-container h3,
+.confirm-container h3 {
+  font-weight: 600;
+  text-align: center;
+  padding: 10px 0;
+  line-height: 1.5;
+}
+
+.payment-container,
+.confirm-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: 10vh;
+}
+
+.confirm-container h3 {
+  margin-top: 10px; /*아이콘과 간격 조절 */
+  font-weight: 500;
+}
+.confirm-subtext {
+  display: block;
+  margin-top: 4px;
+  font-size: 16px;
+  line-height: 1.4;
+  color: #888;
+}
+
+.payment-container .subtext {
+  margin: 0 5px;
+  padding: 10px 0 5px;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  color: #737373;
+}
+.account-number {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+}
+
+.section-divider,
+.menu-divider {
+  display: block;
+  height: 8px;
+  background: #eee;
+}
+.menu-divider {
+  height: 1px;
+}
+
+.list-box {
+  padding: 8px 0;
+  min-height: 70px;
+}
+
+.list-box.cart-items {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+}
+
+.list-box h4 {
+  font-size: 16px;
+  margin: 10px 5px 2px;
+  font-weight: 700;
+}
+/* 품절된 메뉴 텍스트를 회색으로 */
+.list-box.sold-out h4,
+.list-box.sold-out .price,
+.list-box.sold-out .description {
+  color: gray;
+}
+
+.list-box.sold-out {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.price {
+  font-size: 15px;
+  margin: 0 5px;
+}
+.description {
+  font-size: 14px;
+  margin: 10px 5px;
+  color: #737373;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4); /* 반투명 어두운 배경 */
+  z-index: 9; /* 바텀 시트보다 낮게 */
+}
+
+/* 바텀 시트 전체 */
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: white;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease-in-out;
+  z-index: 1000;
+}
+.bottom-sheet-content {
+  padding: 20px;
+  text-align: left;
+}
+
+.show {
+  display: block;
+}
+
+/* 상단 좌우 정렬: 메뉴명 / 닫기 버튼 */
+.sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 15px 0 10px;
+}
+.sheet-header h4 {
+  margin: 0;
+  font-size: 18px;
+}
+.sheet-subheader {
+  font-size: 16px;
+  margin: 0 0 40px;
+}
+
+.sheet-header button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #888;
+  cursor: pointer;
+}
+
+/* 수량: 왼쪽 글자 / 오른쪽 버튼 */
+.sheet-body {
+  margin-bottom: 40px;
+}
+.qty-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.qty-label {
+  font-size: 16px;
+}
+
+.menu-info {
+  flex-grow: 1;
+}
+
+.qty-control {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 5px;
+  height: 24px;
+  min-width: 96px; /* 수량에 따라 좌우 흔들리지 않게 */
+  justify-content: center;
+}
+.qty-btn {
+  background: none;
+  border: none;
+  color: #222;
+  font-size: 20px;
+  width: 20px; /* 버튼 너비 고정 */
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+.qty-btn:disabled {
+  color: #aaa;
+}
+
+.qty {
+  width: 20px;
+  text-align: center;
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.comment-row {
+  display: flex;
+  flex-direction: column;
+  margin-top: 18px;
+}
+.comment-row input {
+  padding: 5px;
+  height: 25px;
+  margin-top: 8px;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.subtext.comment {
+  font-size: 14px;
+  color: #888;
+  padding: 0 4px;
+}
+
+/* 주문 내역 페이지 */
+.orders-container {
+  padding: 16px;
+}
+
+.order-section + .order-section {
+  margin-top: 16px;
+}
+
+.section-header {
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 8px 0;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: bolder;
+}
+
+.order-time {
+  font-size: 14px;
+  color: #737373;
+  padding: 0 5px;
+}
+
+.order-card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 12px;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+.order-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid #eee;
+  padding-top: 8px;
+}
+.order-footer span {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.item-name,
+.item-price {
+  font-size: 15px;
+}
+
+.no-orders {
+  text-align: center;
+  color: #888;
+  margin-top: 40px;
+}
+
+/* 장바구니 버튼 */
+.cart-button {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  background-color: #ff8c00;
+  font-weight: 700;
+  color: white;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.toast-msg {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(50, 50, 50, 0.9);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+  z-index: 9999;
+}
+
+.toast-msg.show {
+  opacity: 1;
+}
+
+.inline-action {
+  position: sticky;
+  left: 0;
+  width: 100%;
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px;
+  z-index: 999;
+  box-sizing: border-box;
+}
+
+.inline-action p {
+  padding: 40px;
+  font-size: 18px;
+}
+
+.inline-button {
+  width: 100%;
+  max-width: 200px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  border: solid 1.5px #ff8c00;
+  color: #ff8c00;
+  text-align: center;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.inline-action {
+  position: sticky;
+  left: 0;
+  width: 100%;
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px;
+  z-index: 999;
+  box-sizing: border-box;
+}
+
+.bottom-bar {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  z-index: 999;
+  box-sizing: border-box;
+}
+
+.bottom-button {
+  width: 100%;
+  max-width: 480px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  background-color: #ff8c00;
+  color: white;
+  text-align: center;
+  border: none;
+  border-radius: 2px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+
+.bottom-bar .bottom-button:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.16);
+}
+
+.bottom-bar .bottom-button:active {
+  transform: scale(0.97);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+.payment-form {
+  width: 100%;
+  /* max-width: 480px; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.payment-info {
+  font-size: 14px;
+  color: #737373;
+  text-align: center;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.hidden {
+  display: none;
+}

@@ -1,6 +1,6 @@
 package lemon.qrordersystem.repository;
 
-import lemon.qrordersystem.entity.TableEntity;
+import lemon.qrordersystem.entity.table.TableEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

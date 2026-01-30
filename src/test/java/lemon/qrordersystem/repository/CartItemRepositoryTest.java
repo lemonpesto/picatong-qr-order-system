@@ -1,7 +1,11 @@
 package lemon.qrordersystem.repository;
 
-import lemon.qrordersystem.entity.*;
 import jakarta.persistence.EntityManager;
+import lemon.qrordersystem.entity.cart.Cart;
+import lemon.qrordersystem.entity.cart.CartItem;
+import lemon.qrordersystem.entity.item.Category;
+import lemon.qrordersystem.entity.item.Item;
+import lemon.qrordersystem.entity.table.TableEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

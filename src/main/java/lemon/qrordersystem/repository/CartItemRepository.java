@@ -1,6 +1,6 @@
 package lemon.qrordersystem.repository;
 
-import lemon.qrordersystem.entity.CartItem;
+import lemon.qrordersystem.entity.cart.CartItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

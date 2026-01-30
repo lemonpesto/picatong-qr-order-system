@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>메뉴판</title>
+
+    <link rel="stylesheet" href="/css/main.css" />
+    <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+<!-- nav -->
+<div th:replace="fragments/nav :: nav(null, null, ${tableNum})"></div>
+
+<!-- 카테고리 목차 -->
+<div class="category-bar" th:if="${!#lists.isEmpty(categories)}">
+    <button
+            class="category-button"
+            th:each="cat : ${categories}"
+            th:attr="data-target=${'section-' + cat.id}"
+            th:text="${cat.name}"
+    >
+        카테고리
+    </button>
+</div>
+
+<div class="callout-container">
+    <div class="menu-callout">
+        <i class="fa-solid fa-bullhorn callout-icon"></i>
+        <span class="callout-text">최초 주문 시 안주를 포함하여 만 원 이상 주문 필수입니다!</span>
+    </div>
+    <div class="menu-callout">
+        <i class="fa-solid fa-bullhorn callout-icon"></i>
+        <span class="callout-text">주방은 23시에, 칵테일은 23시 30분에 마감됩니다.</span>
+    </div>
+</div>
+
+<!-- 메뉴 리스트 -->
+<div th:if="${#lists.isEmpty(categories)}" class="list-box">
+    <p>카테고리가 없습니다.</p>
+</div>
+
+<div th:each="cat, cstat : ${categories}">
+    <div th:attr="id=${'section-' + cat.id}" class="menu-section">
+        <h3 th:text="${cat.name}">카테고리명</h3>
+
+        <!-- 카테고리에 속한 아이템들만 출력 -->
+        <div th:each="it, istat : ${items}" th:if="${it.category != null and it.category.id == cat.id}">
+            <div
+                    class="list-box menu-box"
+                    th:classappend="${it.isActive} ? '' : ' sold-out'"
+                    th:attr="
+                      data-itemid=${it.id},
+                      data-name=${it.name},
+                      data-price=${it.price}
+                    "
+            >
+                <h4 th:text="${it.isActive} ? ${it.name} : ${'(품절) ' + it.name}">
+                    메뉴명
+                </h4>
+
+                <p class="price">
+                    <span th:text="${#numbers.formatInteger(it.price, 0, 'COMMA')}">0</span>원
+                </p>
+
+                <p class="description" th:text="${it.description != null ? it.description : ''}">
+                    설명
+                </p>
+            </div>
+
+            <div class="menu-divider" th:if="${!istat.last}"></div>
+        </div>
+    </div>
+
+    <div class="section-divider" th:if="${!cstat.last}"></div>
+</div>
+
+<!-- 장바구니 보기 버튼 -->
+<div class="bottom-bar">
+    <a href="/cart" id="view-cart" class="bottom-button hidden">장바구니 보기</a>
+</div>
+
+<!-- 바텀 시트 -->
+<div id="bottom-sheet" class="bottom-sheet hidden">
+    <div class="bottom-sheet-content">
+        <div class="sheet-header">
+            <h4 id="sheet-name">메뉴명</h4>
+            <button id="close-sheet">✕</button>
+        </div>
+
+        <div class="sheet-subheader">
+            <span id="sheet-price">단가</span>
+        </div>
+
+        <div class="sheet-body">
+            <div class="qty-row">
+                <span class="qty-label">수량</span>
+                <div class="qty-control">
+                    <button id="minus" class="qty-btn" disabled>
+                        <i class="fa-solid fa-minus fa-2xs"></i>
+                    </button>
+                    <span id="qty" class="qty">1</span>
+                    <button id="plus" class="qty-btn">
+                        <i class="fa-solid fa-plus fa-2xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- (옵션) 기존 ejs에 있던 요청사항 UI: 현재 백엔드 /cart/add에는 반영 안 됨 -->
+            <div id="comment-row" class="comment-row" style="display:none">
+                <label for="sheet-comment">요청사항</label>
+                <input id="sheet-comment" type="text" placeholder="예: 덜 달게, 상큼하게 등" maxlength="50" />
+            </div>
+        </div>
+
+        <button id="add-to-cart" class="cart-button">0원 장바구니에 담기</button>
+    </div>
+</div>
+
+<div id="toast" class="toast-msg"></div>
+<div id="overlay" class="overlay hidden"></div>
+
+<script>
+    // bottom-bar sticky/fixed
+    window.addEventListener("resize", () => {
+        const bar = document.querySelector(".bottom-bar");
+        if (!bar) return;
+        bar.style.position = document.body.scrollHeight > window.innerHeight ? "sticky" : "fixed";
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+        let currItemId = null;
+        let currPrice = 0;
+        let qty = 1;
+
+        // 카테고리 버튼: 해당 섹션으로 스크롤
+        document.querySelectorAll(".category-button").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const id = btn.dataset.target;
+                const section = document.getElementById(id);
+                if (section) section.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+        });
+
+        // toast
+        function showToast(msg) {
+            const t = document.getElementById("toast");
+            if (!t) return;
+            t.textContent = msg;
+            t.classList.add("show");
+            setTimeout(() => t.classList.remove("show"), 1800);
+        }
+
+        // bottom sheet open/close
+        function openBottomSheet(box) {
+            if (box.classList.contains("sold-out")) return;
+
+            currItemId = Number(box.dataset.itemid);
+            currPrice = Number(box.dataset.price);
+            qty = 1;
+
+            document.getElementById("sheet-name").textContent = box.dataset.name;
+            document.getElementById("sheet-price").textContent = currPrice.toLocaleString() + "원";
+            document.getElementById("qty").textContent = "1";
+            document.getElementById("minus").disabled = true;
+
+            // (옵션) 오마카세 요청사항 UI: 지금은 숨김 유지
+            document.getElementById("comment-row").style.display = "none";
+
+            updateAddToCartButton();
+
+            document.getElementById("bottom-sheet").classList.remove("hidden");
+            document.getElementById("overlay").classList.remove("hidden");
+        }
+
+        function closeBottomSheet() {
+            document.getElementById("bottom-sheet").classList.add("hidden");
+            document.getElementById("overlay").classList.add("hidden");
+        }
+
+        document.getElementById("close-sheet").addEventListener("click", closeBottomSheet);
+        document.getElementById("overlay").addEventListener("click", closeBottomSheet);
+
+        document.querySelectorAll(".menu-box").forEach((box) => {
+            box.addEventListener("click", () => openBottomSheet(box));
+        });
+
+        // qty control
+        function updateAddToCartButton() {
+            const total = currPrice * qty;
+            document.getElementById("add-to-cart").textContent =
+                `${total.toLocaleString()}원 장바구니에 담기`;
+        }
+
+        document.getElementById("plus").addEventListener("click", () => {
+            qty++;
+            document.getElementById("qty").textContent = String(qty);
+            document.getElementById("minus").disabled = qty === 1;
+            updateAddToCartButton();
+        });
+
+        document.getElementById("minus").addEventListener("click", () => {
+            if (qty <= 1) return;
+            qty--;
+            document.getElementById("qty").textContent = String(qty);
+            document.getElementById("minus").disabled = qty === 1;
+            updateAddToCartButton();
+        });
+
+        // 장바구니 요약 버튼 갱신 (Spring: CartSummaryDto 가 totalAmount/totalQuantity라고 가정)
+        async function updateCartButton() {
+            try {
+                const res = await fetch("/cart/summary");
+                if (!res.ok) throw new Error("summary fetch fail");
+                const data = await res.json(); // { totalAmount, totalQuantity }
+
+                const viewCart = document.getElementById("view-cart");
+                if (data.totalQuantity > 0) {
+                    viewCart.textContent =
+                        `총 ${Number(data.totalAmount).toLocaleString()}원 장바구니 보기 (${data.totalQuantity})`;
+                    viewCart.classList.remove("hidden");
+                } else {
+                    viewCart.classList.add("hidden");
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        updateCartButton();
+
+        // add to cart (Spring: POST /cart/add + body { itemId, quantity })
+        document.getElementById("add-to-cart").addEventListener("click", async () => {
+            if (!currItemId) return;
+
+            try {
+                const res = await fetch("/cart/add", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ itemId: currItemId, quantity: qty }),
+                });
+                if (!res.ok) throw new Error(await res.text());
+
+                const msg = await res.text();
+                showToast(msg || "장바구니에 추가되었습니다.");
+                await updateCartButton();
+            } catch (err) {
+                showToast("문제가 발생했어요 😢");
+            } finally {
+                closeBottomSheet();
+            }
+        });
+    });
+</script>
+
+<!-- (선택) Spring WebSocket(STOMP)로 실시간 메뉴 반영하려면 여기에 SockJS + Stomp 구독 로직 추가 -->
+</body>
+</html>
