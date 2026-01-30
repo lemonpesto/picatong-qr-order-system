@@ -18,7 +18,10 @@ bin/
 !**/src/test/**/bin/
 
 ### IntelliJ IDEA ###
-src/main/java/lemon/*
+src/main/java/lemon/qrordersystem/config/*
+src/main/java/lemon/qrordersystem/controller/*
+src/main/java/lemon/qrordersystem/dto/*
+src/main/java/lemon/qrordersystem/security/*
 application.properties
 application-test.properties
 
