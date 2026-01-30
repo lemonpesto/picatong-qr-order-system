@@ -1,4 +1,4 @@
-package lemon.qrordersystem.entity;
+package lemon.qrordersystem.entity.order;
 
 public enum OrderStatus {
 

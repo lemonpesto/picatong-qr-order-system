@@ -1,6 +1,7 @@
-package lemon.qrordersystem.entity;
+package lemon.qrordersystem.entity.cart;
 
 import jakarta.persistence.*;
+import lemon.qrordersystem.entity.item.Item;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,7 +17,8 @@ public class CartItem {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Integer count;
+
+    private Integer quantity;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_id")

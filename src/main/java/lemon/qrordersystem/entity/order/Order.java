@@ -1,6 +1,7 @@
-package lemon.qrordersystem.entity;
+package lemon.qrordersystem.entity.order;
 
 import jakarta.persistence.*;
+import lemon.qrordersystem.entity.table.TableEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,7 +34,7 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
-    private Integer totalCount;
+    private Integer totalQuantity;
     private Integer totalAmount;
     private LocalDateTime createdAt;
     private LocalDateTime confirmedAt;

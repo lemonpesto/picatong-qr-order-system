@@ -1,6 +1,7 @@
-package lemon.qrordersystem.entity;
+package lemon.qrordersystem.entity.cart;
 
 import jakarta.persistence.*;
+import lemon.qrordersystem.entity.table.TableEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,6 +28,7 @@ public class Cart {
     private TableEntity table;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<CartItem> cartItems = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
