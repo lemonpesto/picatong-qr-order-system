@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface ItemRepository extends JpaRepository<Item, Long> {
     List<Item> findByIsActiveTrue();
+    List<Item> findByCategory_IdAndIsActiveTrue(Long categoryId);
 }

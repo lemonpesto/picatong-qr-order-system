@@ -2,14 +2,11 @@ package lemon.qrordersystem.entity.cart;
 
 import jakarta.persistence.*;
 import lemon.qrordersystem.entity.item.Item;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "cart_item")
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -28,8 +25,10 @@ public class CartItem {
     @JoinColumn(name = "item_id")
     private Item item;
 
-    public void setCart(Cart cart) {
-        this.cart = cart;
-        cart.getCartItems().add(this);
+    public void changeQuantity(int newQuantity) {
+        if (newQuantity < 1) {
+            throw new IllegalArgumentException("quantity must be >= 1");
+        }
+        this.quantity = newQuantity;
     }
 }

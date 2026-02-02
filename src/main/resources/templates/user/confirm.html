@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>결제확인</title>
+
+    <link rel="stylesheet" th:href="@{/main.css}" />
+    <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+<div th:replace="~{fragments/nav :: nav(${navTitle}, @{/items}, ${tableNum})}"></div>
+
+<div class="confirm-container">
+    <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: #ff8c00"></i>
+    <h3>운영진이 입금 내역을 확인 중이니<br />잠시만 기다려주세요!</h3>
+    <span class="confirm-subtext">
+        * 만약 주문 접수 창이 계속 뜨지 않는다면<br />
+        운영진을 불러주세요
+    </span>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stomp-websocket@2.3.4/lib/stomp.min.js"></script>
+
+<script th:inline="javascript">
+    const TABLE_ID = /*[[${tableId}]]*/ null;
+    // const orderId = /*[[${orderId}]]*/ null;
+
+    window.addEventListener("load", () => {
+        const socket = new SockJS('/ws');
+        const stomp = Stomp.over(socket);
+        stomp.debug = null;
+
+        stomp.connect({}, () => {
+            stomp.subscribe(`/topic/tables/${tableId}/payment`, (frame) => {
+                const evt = JSON.parse(frame.body);
+
+                // // 해당 주문만 반응
+                // if (orderId != null && evt?.orderId != null && Number(orderId) !== Number(evt.orderId)) return;
+
+                if (evt?.type === "REDIRECT" && evt?.url) {
+                    window.location.replace(evt.url);
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

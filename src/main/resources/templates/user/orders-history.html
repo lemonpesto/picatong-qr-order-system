@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>피카통 오더</title>
+
+    <link rel="stylesheet" th:href="@{/main.css}" />
+    <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+<div th:replace="~{fragments/nav :: nav(${navTitle}, @{/items}, ${tableNum})}"></div>
+
+<div class="orders-container">
+    <p class="no-orders" th:if="${orders == null || #lists.isEmpty(orders)}">주문 내역이 없습니다.</p>
+
+    <div th:if="${orders != null && !#lists.isEmpty(orders)}">
+        <div class="order-section" th:each="order, st : ${orders}">
+            <div class="order-card">
+                <div class="section-header">
+                    <span class="section-title" th:text="${st.index == 0} ? '최근 주문' : '이전 주문'">최근 주문</span>
+                    <span class="order-time" th:text="${#temporals.format(order.createdAt, 'HH:mm')}">00:00</span>
+                </div>
+
+                <!-- 주문 아이템들 -->
+                <div class="order-item" th:each="oi : ${order.orderItems}">
+                    <div class="left-item">
+                <span class="item-name"
+                      th:text="${oi.item.name} + ' x' + ${oi.quantity}">메뉴 x1</span>
+                    </div>
+
+                    <span class="item-price"
+                          th:text="${#numbers.formatInteger(oi.orderPrice * oi.quantity, 0, 'COMMA')} + '원'">0원</span>
+                </div>
+
+                <div class="order-footer">
+                    <span>합계</span>
+                    <span class="order-total"
+                          th:text="${#numbers.formatInteger(order.totalAmount, 0, 'COMMA')} + '원'">0원</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${pageTitle}">관리자 페이지</title>
+
+    <link rel="stylesheet" th:href="@{/css/admin.css}" />
+
+    <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<!-- 공통 사이드바 -->
+<div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+
+<div class="topbar">
+    <i class="fas fa-bars" id="nav-bars"></i>
+    <span class="page-title" th:text="${pageTitle}">관리자 페이지</span>
+</div>
+<!-- 공통 사이드바 & 상단바 끝 -->
+
+<div class="orders-page">
+
+    <!-- 주문 목록 -->
+    <div class="order-list">
+        <div th:each="order : ${orders}"
+             class="order-card"
+             th:attr="data-table=${order.table.tableNum}">
+
+            <div class="order-header">
+                <div class="left-header">
+                    <span class="table-num" th:text="'테이블 ' + ${order.table.tableNum}">테이블 1</span>
+                    <span class="time" th:text="${#temporals.format(order.createdAt, 'MM/dd HH:mm')}">
+                        01/20 12:34
+                    </span>
+                </div>
+                <div class="right-header">
+                    <span class="order-status"
+                          th:classappend="${order.status.name() == 'COMPLETED'} ? 'status-served' : 'status-pending'"
+                          th:text="${order.status.name() == 'COMPLETED'} ? '완료' : '대기'">
+                        완료
+                    </span>
+                </div>
+            </div>
+
+            <ul class="items-list">
+                <li th:each="item : ${order.orderItems}" class="order-item">
+                    <span th:text="${item.item.name}">메뉴명</span>
+                    <span th:text="${item.quantity} + '개'">1개</span>
+                </li>
+            </ul>
+
+            <div class="order-footer">
+                <span>총액</span>
+                <span th:text="${#numbers.formatInteger(order.totalAmount, 0, 'COMMA')} + '원'">
+                    10,000원
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 공통 스크립트 -->
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<script th:src="@{/js/admin-sidebar.js}"></script>
+<script th:src="@{/js/toast.js}"></script>
+<!-- 공통 스크립트 끝 -->
+
+<script>
+
+    // 테이블 필터링
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const orderCards = document.querySelectorAll('.order-card');
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tableNum = btn.getAttribute('data-table');
+
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            orderCards.forEach(card => {
+                if (tableNum === 'all' || card.getAttribute('data-table') === tableNum) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,11 +1,16 @@
 package lemon.qrordersystem.service;
 
 import lemon.qrordersystem.dto.CartSummaryDto;
+import lemon.qrordersystem.dto.CartSyncDto;
+import lemon.qrordersystem.dto.CartUpdatedMessage;
 import lemon.qrordersystem.entity.cart.Cart;
 import lemon.qrordersystem.entity.cart.CartItem;
 import lemon.qrordersystem.entity.cart.CartStatus;
 import lemon.qrordersystem.entity.item.Item;
 import lemon.qrordersystem.entity.table.TableEntity;
+import lemon.qrordersystem.exception.BusinessException;
+import lemon.qrordersystem.exception.ItemNotFoundException;
+import lemon.qrordersystem.exception.ItemSoldOutException;
 import lemon.qrordersystem.repository.CartItemRepository;
 import lemon.qrordersystem.repository.CartRepository;
 import lemon.qrordersystem.repository.ItemRepository;
@@ -13,6 +18,8 @@ import lemon.qrordersystem.repository.TableRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,49 +34,57 @@ public class CartService {
     private final CartItemRepository cartItemRepository;
     private final TableRepository tableRepository;
     private final ItemRepository itemRepository;
+    private final WebSocketService ws;
 
     /**
-     * 테이블의 활성 장바구니 조회 (없으면 생성)
+     * 사용 가능한 장바구니 조회, 없으면 생성
      */
-    @Transactional
     public Cart getOrCreateCart(Long tableId) {
         TableEntity table = tableRepository.findById(tableId)
-                .orElseThrow(() -> new RuntimeException("테이블을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException("테이블을 찾을 수 없습니다."));
 
         return cartRepository.findByTable_IdAndStatus(tableId, CartStatus.ACTIVE)
                 .orElseGet(() -> {
-                    Cart newCart = Cart.builder()
+                    Cart cart = Cart.builder()
                             .table(table)
                             .status(CartStatus.ACTIVE)
-                            .updatedAt(LocalDateTime.now())
                             .build();
-                    return cartRepository.save(newCart);
+                    return cartRepository.save(cart);
                 });
+    }
+
+    /**
+     * 장바구니 상태를 ORDERING -> ACTIVE로 되돌림
+     */
+    public void unlockCartToActive(Long tableId) {
+        cartRepository.findByTable_IdAndStatus(tableId, CartStatus.ORDERING)
+                .ifPresent(Cart::unlockToActive);
     }
 
     /**
      * 장바구니에 아이템 추가
      */
-    @Transactional
-    public void addToCart(Long tableId, Long itemId, Integer quantity) {
+    public void addItem(Long tableId, Long itemId, Integer quantity) {
         Cart cart = getOrCreateCart(tableId);
+        assertEditable(cart);
 
         Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("메뉴를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ItemNotFoundException(itemId));
 
         if (!item.getIsActive()) {
-            throw new RuntimeException("품절된 상품입니다.");
+            throw new ItemSoldOutException(itemId);
         }
 
         // 기존 장바구니 아이템 확인
-        Optional<CartItem> existingCartItem = cartItemRepository
-                .findByCartIdAndItemId(cart.getId(), itemId);
+        CartItem existingCartItem = cart.getCartItems().stream()
+                .filter(ci -> ci.getItem().getId().equals(itemId))
+                .findFirst()
+                .orElse(null);
 
-        if (existingCartItem.isPresent()) {
+        // 기존에 담아놨던 아이템이라면
+        if (existingCartItem != null) {
             // 수량 추가
-            CartItem cartItem = existingCartItem.get();
-            cartItem.setQuantity(cartItem.getQuantity() + quantity);
-            cartItemRepository.save(cartItem);
+            existingCartItem.changeQuantity(existingCartItem.getQuantity() + quantity);
         } else {
             // 새로운 아이템 추가
             CartItem cartItem = CartItem.builder()
@@ -77,56 +92,60 @@ public class CartService {
                     .item(item)
                     .quantity(quantity)
                     .build();
-            cartItemRepository.save(cartItem);
+
+            cart.getCartItems().add(cartItem);
         }
 
-        cart.setUpdatedAt(LocalDateTime.now());
-        cartRepository.save(cart);
+        // 같은 테이블의 모든 사용자에게 장바구니 변경 알림
+        notifyCartUpdated(tableId);
     }
 
     /**
      * 장바구니 아이템 수량 변경
      */
-    @Transactional
-    public void updateCartItemQuantity(Long tableId, Long itemId, Integer count) {
+    public void updateQuantity(Long tableId, Long itemId, Integer quantity) {
         Cart cart = getOrCreateCart(tableId);
+        assertEditable(cart);
 
-        CartItem cartItem = cartItemRepository.findByCartIdAndItemId(cart.getId(), itemId)
-                .orElseThrow(() -> new RuntimeException("장바구니에 해당 아이템이 없습니다."));
+        CartItem ci = cart.getCartItems().stream()
+                .filter(x -> x.getItem() != null && x.getItem().getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException("장바구니에 해당 아이템이 없습니다."));
 
-        if (count <= 0) {
-            throw new RuntimeException("수량은 1개 이상이어야 합니다.");
+        if (quantity <= 0) {
+            cart.getCartItems().remove(ci);
+        } else {
+            ci.changeQuantity(quantity);
         }
 
-        cartItem.setQuantity(count);
-        cartItemRepository.save(cartItem);
-
-        cart.setUpdatedAt(LocalDateTime.now());
-        cartRepository.save(cart);
+        notifyCartUpdated(tableId);
     }
 
     /**
      * 장바구니 아이템 삭제
      */
-    @Transactional
-    public void removeCartItem(Long tableId, Long itemId) {
+    public void deleteItem(Long tableId, Long itemId) {
         Cart cart = getOrCreateCart(tableId);
+        assertEditable(cart);
 
-        CartItem cartItem = cartItemRepository.findByCartIdAndItemId(cart.getId(), itemId)
-                .orElseThrow(() -> new RuntimeException("장바구니에 해당 아이템이 없습니다."));
+        boolean removed = cart.getCartItems().removeIf(ci ->
+                ci.getItem() != null && ci.getItem().getId().equals(itemId)
+        );
 
-        cartItemRepository.delete(cartItem);
+        if (!removed) {
+            throw new BusinessException("장바구니에 해당 아이템이 없습니다.");
+        }
 
-        cart.setUpdatedAt(LocalDateTime.now());
-        cartRepository.save(cart);
+        notifyCartUpdated(tableId);
     }
 
     /**
      * 장바구니 요약 정보 조회
      */
     public CartSummaryDto getCartSummary(Long tableId) {
-        Optional<Cart> cartOpt = cartRepository
-                .findByTable_IdAndStatus(tableId, CartStatus.ACTIVE);
+        Optional<Cart> cartOpt = cartRepository.findFirstByTable_IdAndStatusInOrderByIdDesc(
+                tableId, List.of(CartStatus.ORDERING, CartStatus.ACTIVE)
+        );
 
         if (cartOpt.isEmpty()) {
             return new CartSummaryDto(0, 0);
@@ -151,13 +170,14 @@ public class CartService {
      */
     public List<CartItem> getCartItems(Long tableId) {
         Cart cart = getOrCreateCart(tableId);
-        return cartItemRepository.findByCartId(cart.getId());
+        assertEditable(cart);
+
+        return cart.getCartItems();
     }
 
     /**
      * 장바구니 비우기
      */
-    @Transactional
     public void clearCart(Long tableId) {
         Optional<Cart> cartOpt = cartRepository
                 .findByTable_IdAndStatus(tableId, CartStatus.ACTIVE);
@@ -165,8 +185,50 @@ public class CartService {
         if (cartOpt.isPresent()) {
             Cart cart = cartOpt.get();
             cartItemRepository.deleteByCartId(cart.getId());
-            cart.setUpdatedAt(LocalDateTime.now());
-            cartRepository.save(cart);
         }
+
+        notifyCartUpdated(tableId);
+    }
+
+    private void assertEditable(Cart cart) {
+        if (!cart.isEditable()) {
+            throw new BusinessException("현재 주문 중입니다.");
+        }
+    }
+
+    private void notifyCartUpdated(Long tableId) {
+        CartSyncDto payload = buildCartSyncDto(tableId);
+        ws.tableCartUpdated(tableId, payload);
+    }
+
+    @Transactional(readOnly = true)
+    public CartSyncDto buildCartSyncDto(Long tableId) {
+        Optional<Cart> cartOpt = cartRepository.findFirstByTable_IdAndStatusInOrderByIdDesc(
+                tableId, List.of(CartStatus.ORDERING, CartStatus.ACTIVE)
+        );
+
+        if (cartOpt.isEmpty()) {
+            return new CartSyncDto(new CartSummaryDto(0, 0), List.of());
+        }
+
+        Cart cart = cartOpt.get();
+
+        List<CartSyncDto.CartLineDto> lines = cart.getCartItems().stream()
+                .filter(ci -> ci.getItem() != null)
+                .map(ci -> new CartSyncDto.CartLineDto(
+                        ci.getItem().getId(),
+                        ci.getItem().getName(),
+                        ci.getItem().getPrice(),
+                        ci.getQuantity(),
+                        ci.getItem().getPrice() * ci.getQuantity()
+                ))
+                .toList();
+
+        CartSummaryDto summary = new CartSummaryDto(
+                lines.stream().mapToInt(CartSyncDto.CartLineDto::quantity).sum(),
+                lines.stream().mapToInt(CartSyncDto.CartLineDto::lineAmount).sum()
+        );
+
+        return new CartSyncDto(summary, lines);
     }
 }

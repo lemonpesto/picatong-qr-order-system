@@ -1,0 +1,4 @@
+<div th:fragment="toast">
+    <div th:if="${successMessage}" class="toast success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="toast error" th:text="${errorMessage}"></div>
+</div>

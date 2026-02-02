@@ -11,7 +11,7 @@ public enum OrderStatus {
 
     private final String description;
 
-    OrderStatus(String description) {
+     OrderStatus(String description) {
         this.description = description;
     }
 

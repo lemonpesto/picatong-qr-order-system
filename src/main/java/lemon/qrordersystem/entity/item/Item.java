@@ -1,14 +1,12 @@
 package lemon.qrordersystem.entity.item;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lemon.qrordersystem.entity.order.Order;
+import lombok.*;
 
 @Entity
 @Table(name = "item")
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -26,4 +24,12 @@ public class Item {
     private Integer price;
     private String description;
     private Boolean isActive;
+
+    public void update(String name, Integer price, Category category, Boolean isActive, String description) {
+        this.name = name;
+        this.price = price;
+        this.category = category;
+        this.isActive = isActive;
+        this.description = description;
+    }
 }

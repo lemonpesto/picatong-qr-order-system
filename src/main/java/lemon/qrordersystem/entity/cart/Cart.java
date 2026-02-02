@@ -2,10 +2,7 @@ package lemon.qrordersystem.entity.cart;
 
 import jakarta.persistence.*;
 import lemon.qrordersystem.entity.table.TableEntity;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,7 +10,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "cart")
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -32,6 +29,31 @@ public class Cart {
     private List<CartItem> cartItems = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
-    private CartStatus status;
-    private LocalDateTime updatedAt;
+    @Builder.Default
+    private CartStatus status = CartStatus.ACTIVE;
+
+    private LocalDateTime lockedAt;
+
+    @Version
+    private Long version;
+
+    public boolean isEditable() {
+        return this.status == CartStatus.ACTIVE;
+    }
+
+    public void lockForOrdering() {
+        if (this.status != CartStatus.ACTIVE) {
+            throw new IllegalStateException("Cart is not ACTIVE");
+        }
+        this.status = CartStatus.ORDERING;
+        this.lockedAt = LocalDateTime.now();
+    }
+
+    public void unlockToActive() {
+        if (this.status != CartStatus.ORDERING) {
+            throw new IllegalStateException("Cart is not ORDERING");
+        }
+        this.status = CartStatus.ACTIVE;
+        this.lockedAt = null;
+    }
 }
