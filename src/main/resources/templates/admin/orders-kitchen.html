@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${pageTitle}">관리자 페이지</title>
+
+    <link rel="stylesheet" th:href="@{/css/admin.css}" />
+
+    <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<!-- 공통 사이드바 -->
+<div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+
+<div class="topbar">
+    <i class="fas fa-bars" id="nav-bars"></i>
+    <span class="page-title" th:text="${pageTitle}">관리자 페이지</span>
+</div>
+
+<div th:replace="~{fragments/toast :: toast}"></div>
+<!-- 공통 사이드바 & 상단바 끝 -->
+
+<div class="kitchen-page">
+    <div th:if="${orders.isEmpty()}" class="inline-action">
+        <p>조리할 주문이 없습니다</p>
+    </div>
+
+    <div th:each="order : ${orders}" class="order-card" th:attr="data-order-id=${order.id}">
+        <div class="order-header">
+            <span class="table-num" th:text="'테이블 ' + ${order.table.tableNum}">테이블 1</span>
+            <span class="time" th:text="${#temporals.format(order.confirmedAt, 'HH:mm:ss')}">12:34:56</span>
+        </div>
+
+        <ul class="order-items">
+            <li th:each="oi : ${order.orderItems}">
+                <label>
+                    <input type="checkbox"
+                           class="cook-checkbox"
+                           th:checked="${oi.cooked}"
+                           th:attr="data-order-id=${order.id}, data-order-item-id=${oi.id}"
+                           onchange="toggleCooked(this)" />
+                    <span class="item-text">
+                        <span th:text="${oi.item.name}">메뉴명</span>
+                        <span th:text="' x' + ${oi.quantity}">x1</span>
+                    </span>
+                </label>
+            </li>
+        </ul>
+
+        <div class="kitchen-order-footer">
+            <button class="complete-order-btn"
+                    th:attr="data-order-id=${order.id}"
+                    onclick="completeOrder(this)">
+                조리 완료
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 공통 스크립트 -->
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<script th:src="@{/js/admin-sidebar.js}"></script>
+<script th:src="@{/js/toast.js}"></script>
+<!-- 공통 스크립트 끝 -->
+
+<script>
+    // === WebSocket ===
+    const socket = new SockJS('/ws');
+    const stompClient = Stomp.over(socket);
+    stompClient.debug = null;
+
+    stompClient.connect({}, function() {
+        console.log('주방 페이지 WebSocket 연결됨');
+
+        // 입금 확인된 주문
+        stompClient.subscribe('/topic/admin/kitchen/orders', function(message) {
+            try {
+                const evt = JSON.parse(message.body);
+                if (evt && evt.type === 'RELOAD') {
+                    location.reload();
+                }
+            } catch (e) {
+                // 서버가 문자열만 보내는 경우에도 안전하게 reload
+                location.reload();
+            }
+        });
+    });
+
+    // === 개별 아이템 조리 완료/취소 토글 ===
+    async function toggleCooked(checkbox) {
+        const orderId = checkbox.getAttribute('data-order-id');
+        const orderItemId = checkbox.getAttribute('data-order-item-id');
+        const isCooked = checkbox.checked;
+
+        // 연타 방지
+        checkbox.disabled = true;
+
+        try {
+            const url = isCooked
+                ? `/admin/kitchen/orders/${orderId}/items/${orderItemId}/cook`
+                : `/admin/kitchen/orders/${orderId}/items/${orderItemId}/uncook`;
+
+            const response = await fetch(url, { method: 'POST' });
+            const result = await response.json();
+
+            if (!result.success) {
+                alert('처리 실패: ' + result.message);
+                checkbox.checked = !isCooked; // 원상복구
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('오류가 발생했습니다: ' + error);
+            checkbox.checked = !isCooked; // 원상복구
+        } finally {
+            checkbox.disabled = false;
+        }
+    }
+
+    // === 전체 조리 완료 ===
+    async function completeOrder(button) {
+        const orderId = button.getAttribute('data-order-id');
+        if (!confirm('조리가 완료되었습니까?')) return;
+
+        button.disabled = true;
+
+        try {
+            const response = await fetch(`/admin/orders/${orderId}/complete-kitchen`, {
+                method: 'POST'
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                const card = button.closest('.order-card');
+                card.style.transition = 'opacity 0.3s';
+                card.style.opacity = '0';
+                setTimeout(() => card.remove(), 300);
+            } else {
+                alert('처리 실패: ' + (result.message || 'unknown'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('오류가 발생했습니다: ' + error);
+        } finally {
+            button.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>

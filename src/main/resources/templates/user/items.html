@@ -11,7 +11,7 @@
 
 <body>
 <!-- nav -->
-<div th:replace="fragments/nav :: nav(null, null, ${tableNum})"></div>
+<div th:replace="~{fragments/nav :: nav(null, null, ${tableNum})}"></div>
 
 <!-- 카테고리 목차 -->
 <div class="category-bar" th:if="${!#lists.isEmpty(categories)}">
@@ -107,7 +107,6 @@
                 </div>
             </div>
 
-            <!-- (옵션) 기존 ejs에 있던 요청사항 UI: 현재 백엔드 /cart/add에는 반영 안 됨 -->
             <div id="comment-row" class="comment-row" style="display:none">
                 <label for="sheet-comment">요청사항</label>
                 <input id="sheet-comment" type="text" placeholder="예: 덜 달게, 상큼하게 등" maxlength="50" />
@@ -118,10 +117,50 @@
     </div>
 </div>
 
-<div id="toast" class="toast-msg"></div>
+<div id="toast" class="toast"></div>
 <div id="overlay" class="overlay hidden"></div>
 
-<script>
+<!-- WebSocket libs -->
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<script th:inline="javascript">
+    // ============================================
+    // Vars
+    // ============================================
+    const tableId = /*[[${tableId}]]*/ null;
+
+    let currItemId = null;
+    let currPrice = 0;
+    let qty = 1;
+
+    // WS clients (nav / cart)
+    let navStomp = null;
+    let cartStomp = null;
+    let itemUpdateStomp = null;
+
+    // ============================================
+    // Init
+    // ============================================
+    document.addEventListener("DOMContentLoaded", () => {
+        bindCategoryScroll();
+        bindBottomSheet();
+
+        // 초기 1회: 현재 summary로 버튼 표시
+        refreshCartSummaryFromServer();
+
+        // WS 연결
+        connectNavTopic();
+        connectCartTopic();
+        connectItemUpdateTopic();
+    });
+
+    window.addEventListener("beforeunload", () => {
+        try { navStomp?.disconnect(); } catch (e) {}
+        try { cartStomp?.disconnect(); } catch (e) {}
+        try { itemUpdateStomp?.disconnect(); } catch (e) {}
+    });
+
     // bottom-bar sticky/fixed
     window.addEventListener("resize", () => {
         const bar = document.querySelector(".bottom-bar");
@@ -129,12 +168,106 @@
         bar.style.position = document.body.scrollHeight > window.innerHeight ? "sticky" : "fixed";
     });
 
-    document.addEventListener("DOMContentLoaded", () => {
-        let currItemId = null;
-        let currPrice = 0;
-        let qty = 1;
+    // ============================================
+    // WebSocket: NAV (/topic/tables/{tableId}/nav)
+    // ============================================
+    function connectNavTopic() {
+        if (!tableId) return;
 
-        // 카테고리 버튼: 해당 섹션으로 스크롤
+        const socket = new SockJS("/ws");
+        navStomp = Stomp.over(socket);
+        navStomp.debug = null;
+
+        navStomp.connect({}, () => {
+            navStomp.subscribe(`/topic/tables/${tableId}/nav`, (frame) => {
+                const evt = safeJson(frame.body);
+                if (!evt) return;
+
+                if (evt.type === "REDIRECT" && evt.data?.url) {
+                    window.location.replace(evt.data.url);
+                    return;
+                }
+                if (evt.type === "INFO" && evt.data?.message) {
+                    showToast(evt.data.message);
+                }
+            });
+        });
+    }
+
+    // ============================================
+    // WebSocket: CART (/topic/tables/{tableId}/cart)
+    // - 부분 갱신: "장바구니 보기 버튼 요약"만 업데이트
+    // ============================================
+    function connectCartTopic() {
+        if (!tableId) return;
+
+        const socket = new SockJS("/ws");
+        cartStomp = Stomp.over(socket);
+        cartStomp.debug = null;
+
+        cartStomp.connect({}, () => {
+            cartStomp.subscribe(`/topic/tables/${tableId}/cart`, (frame) => {
+                const evt = safeJson(frame.body);
+                if (!evt || evt.type !== "CART_UPDATED") return;
+
+                // evt.data = { summary, items }
+                const summary = evt.data?.summary;
+                if (summary) {
+                    renderCartButton(summary);
+                } else {
+                    // 혹시 포맷이 바뀌면 안전하게 재조회
+                    refreshCartSummaryFromServer();
+                }
+            });
+        });
+    }
+
+    // ==== 관리자가 메뉴 수정 시 ====
+    function connectItemUpdateTopic() {
+        const socket = new SockJS("/ws");
+        itemUpdateStomp = Stomp.over(socket);
+        itemUpdateStomp.debug = null;
+
+        itemUpdateStomp.connect({}, () => {
+            itemUpdateStomp.subscribe("/topic/items/updated", (frame) => {
+                const evt = safeJson(frame.body);
+                if (!evt || evt.type !== "ITEM_UPDATED") return;
+
+                const it = evt.data; // { itemId, name, price, isActive }
+                applyItemUpdateToItemsPage(it);
+                showToast("메뉴 정보가 업데이트되었습니다.");
+            });
+        });
+    }
+
+    function applyItemUpdateToItemsPage(it) {
+        // menu-box는 data-itemid로 식별 가능
+        const box = document.querySelector(`.menu-box[data-itemid="${String(it.itemId)}"]`);
+        if (!box) return; // 현재 화면에 없는 아이템이면 무시
+
+        // 품절 표시/클릭 막기
+        if (!it.isActive) box.classList.add("sold-out");
+        else box.classList.remove("sold-out");
+
+        // 제목(품절 prefix 포함)
+        const h4 = box.querySelector("h4");
+        if (h4) {
+            h4.textContent = it.isActive ? it.name : `(품절) ${it.name}`;
+        }
+
+        // 가격
+        const priceSpan = box.querySelector(".price span");
+        if (priceSpan) priceSpan.textContent = Number(it.price).toLocaleString("ko-KR");
+
+        // dataset도 갱신(바텀시트에서 사용)
+        box.dataset.name = it.name;
+        box.dataset.price = String(it.price);
+    }
+
+    // ============================================
+    // UI: Category scroll
+    // ============================================
+    function bindCategoryScroll() {
         document.querySelectorAll(".category-button").forEach((btn) => {
             btn.addEventListener("click", () => {
                 const id = btn.dataset.target;
@@ -142,118 +275,145 @@
                 if (section) section.scrollIntoView({ behavior: "smooth", block: "start" });
             });
         });
+    }
 
-        // toast
-        function showToast(msg) {
-            const t = document.getElementById("toast");
-            if (!t) return;
-            t.textContent = msg;
-            t.classList.add("show");
-            setTimeout(() => t.classList.remove("show"), 1800);
-        }
-
-        // bottom sheet open/close
-        function openBottomSheet(box) {
-            if (box.classList.contains("sold-out")) return;
-
-            currItemId = Number(box.dataset.itemid);
-            currPrice = Number(box.dataset.price);
-            qty = 1;
-
-            document.getElementById("sheet-name").textContent = box.dataset.name;
-            document.getElementById("sheet-price").textContent = currPrice.toLocaleString() + "원";
-            document.getElementById("qty").textContent = "1";
-            document.getElementById("minus").disabled = true;
-
-            // (옵션) 오마카세 요청사항 UI: 지금은 숨김 유지
-            document.getElementById("comment-row").style.display = "none";
-
-            updateAddToCartButton();
-
-            document.getElementById("bottom-sheet").classList.remove("hidden");
-            document.getElementById("overlay").classList.remove("hidden");
-        }
-
-        function closeBottomSheet() {
-            document.getElementById("bottom-sheet").classList.add("hidden");
-            document.getElementById("overlay").classList.add("hidden");
-        }
-
-        document.getElementById("close-sheet").addEventListener("click", closeBottomSheet);
-        document.getElementById("overlay").addEventListener("click", closeBottomSheet);
-
+    // ============================================
+    // UI: Bottom sheet
+    // ============================================
+    function bindBottomSheet() {
+        // 아이템 클릭 시 open
         document.querySelectorAll(".menu-box").forEach((box) => {
             box.addEventListener("click", () => openBottomSheet(box));
         });
 
-        // qty control
-        function updateAddToCartButton() {
-            const total = currPrice * qty;
-            document.getElementById("add-to-cart").textContent =
-                `${total.toLocaleString()}원 장바구니에 담기`;
-        }
+        // 닫기
+        document.getElementById("close-sheet").addEventListener("click", closeBottomSheet);
+        document.getElementById("overlay").addEventListener("click", closeBottomSheet);
 
+        // 수량 +
         document.getElementById("plus").addEventListener("click", () => {
             qty++;
-            document.getElementById("qty").textContent = String(qty);
-            document.getElementById("minus").disabled = qty === 1;
-            updateAddToCartButton();
+            updateQtyUI();
         });
 
+        // 수량 -
         document.getElementById("minus").addEventListener("click", () => {
             if (qty <= 1) return;
             qty--;
-            document.getElementById("qty").textContent = String(qty);
-            document.getElementById("minus").disabled = qty === 1;
-            updateAddToCartButton();
+            updateQtyUI();
         });
 
-        // 장바구니 요약 버튼 갱신 (Spring: CartSummaryDto 가 totalAmount/totalQuantity라고 가정)
-        async function updateCartButton() {
-            try {
-                const res = await fetch("/cart/summary");
-                if (!res.ok) throw new Error("summary fetch fail");
-                const data = await res.json(); // { totalAmount, totalQuantity }
+        // 장바구니 담기
+        document.getElementById("add-to-cart").addEventListener("click", onAddToCart);
+    }
 
-                const viewCart = document.getElementById("view-cart");
-                if (data.totalQuantity > 0) {
-                    viewCart.textContent =
-                        `총 ${Number(data.totalAmount).toLocaleString()}원 장바구니 보기 (${data.totalQuantity})`;
-                    viewCart.classList.remove("hidden");
-                } else {
-                    viewCart.classList.add("hidden");
+    function openBottomSheet(box) {
+        if (box.classList.contains("sold-out")) return;
+
+        currItemId = Number(box.dataset.itemid);
+        currPrice = Number(box.dataset.price);
+        qty = 1;
+
+        document.getElementById("sheet-name").textContent = box.dataset.name;
+        document.getElementById("sheet-price").textContent = formatWon(currPrice);
+        document.getElementById("comment-row").style.display = "none";
+
+        updateQtyUI();
+
+        document.getElementById("bottom-sheet").classList.remove("hidden");
+        document.getElementById("overlay").classList.remove("hidden");
+    }
+
+    function closeBottomSheet() {
+        document.getElementById("bottom-sheet").classList.add("hidden");
+        document.getElementById("overlay").classList.add("hidden");
+    }
+
+    function updateQtyUI() {
+        document.getElementById("qty").textContent = String(qty);
+        document.getElementById("minus").disabled = qty === 1;
+        updateAddToCartButtonText();
+    }
+
+    function updateAddToCartButtonText() {
+        document.getElementById("add-to-cart").textContent =
+            `${formatComma(currPrice * qty)}원 장바구니에 담기`;
+    }
+
+    async function onAddToCart() {
+        if (!currItemId) return;
+
+        try {
+            const res = await fetch("/cart/add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ itemId: currItemId, quantity: qty }),
+            });
+
+            if (!res.ok) {
+                const errMsg = await res.text().catch(() => "");
+                throw new Error(errMsg || "장바구니 담기 실패");
+            }
+
+            // 서버가 summary를 반환하는 경우에만 즉시 반영(선택)
+            // 최종 동기화는 WS 이벤트가 담당
+            const maybeJson = await res.text();
+            if (maybeJson) {
+                const parsed = safeJson(maybeJson);
+                if (parsed && (parsed.totalAmount != null || parsed.totalQuantity != null)) {
+                    renderCartButton(parsed);
                 }
-            } catch (e) {
-                console.error(e);
             }
+
+            showToast("장바구니에 추가되었습니다.");
+        } catch (err) {
+            showToast(err?.message || "문제가 발생했어요 😢");
+        } finally {
+            closeBottomSheet();
         }
+    }
 
-        updateCartButton();
+    // ============================================
+    // Cart button
+    // ============================================
+    function renderCartButton(summary) {
+        const viewCart = document.getElementById("view-cart");
+        const totalQuantity = Number(summary?.totalQuantity ?? 0);
+        const totalAmount = Number(summary?.totalAmount ?? 0);
 
-        // add to cart (Spring: POST /cart/add + body { itemId, quantity })
-        document.getElementById("add-to-cart").addEventListener("click", async () => {
-            if (!currItemId) return;
+        if (totalQuantity > 0) {
+            viewCart.textContent = `총 ${formatComma(totalAmount)}원 장바구니 보기 (${totalQuantity})`;
+            viewCart.classList.remove("hidden");
+        } else {
+            viewCart.classList.add("hidden");
+        }
+    }
 
-            try {
-                const res = await fetch("/cart/add", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ itemId: currItemId, quantity: qty }),
-                });
-                if (!res.ok) throw new Error(await res.text());
+    async function refreshCartSummaryFromServer() {
+        try {
+            const res = await fetch("/cart/summary");
+            if (!res.ok) return;
+            const data = await res.json(); // { totalAmount, totalQuantity }
+            renderCartButton(data);
+        } catch (e) {
+            console.error(e);
+        }
+    }
 
-                const msg = await res.text();
-                showToast(msg || "장바구니에 추가되었습니다.");
-                await updateCartButton();
-            } catch (err) {
-                showToast("문제가 발생했어요 😢");
-            } finally {
-                closeBottomSheet();
-            }
-        });
-    });
+    // ============================================
+    // Utils
+    // ============================================
+    function safeJson(str) {
+        try { return JSON.parse(str); } catch (e) { return null; }
+    }
+
+    function formatComma(n) {
+        return Number(n ?? 0).toLocaleString("ko-KR");
+    }
+
+    function formatWon(n) {
+        return `${formatComma(n)}원`;
+    }
 </script>
-
-<!-- (선택) Spring WebSocket(STOMP)로 실시간 메뉴 반영하려면 여기에 SockJS + Stomp 구독 로직 추가 -->
 </body>
 </html>

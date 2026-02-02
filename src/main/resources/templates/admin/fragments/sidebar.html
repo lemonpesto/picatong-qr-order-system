@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div th:fragment="sidebar" id="sidebar" class="sidebar">
+    <a th:href="@{/admin/kitchen/orders}">주방</a>
+    <a th:href="@{/admin/orders/hall}">홀</a>
+    <a th:href="@{/admin/items}">메뉴 관리</a>
+    <a th:href="@{/admin/orders/history}">주문 내역</a>
+</div>
+</body>
+</html>

@@ -1,11 +1,12 @@
-function showToast(message) {
-  const toast = document.getElementById('toast');
-  if (!toast) return;
+// toast.js
+(function () {
+  const toasts = document.querySelectorAll(".toast");
 
-  toast.textContent = message;
-  toast.classList.add('show');
+  toasts.forEach(function (toast) {
+    toast.classList.add("show");
 
-  setTimeout(() => {
-    toast.classList.remove('show');
-  }, 2000);
-}
+    setTimeout(function () {
+      toast.classList.remove("show");
+    }, 2000);
+  });
+})();

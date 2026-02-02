@@ -481,7 +481,7 @@ a {
   cursor: pointer;
 }
 
-.toast-msg {
+.toast {
   position: fixed;
   bottom: 80px;
   left: 50%;
@@ -497,7 +497,7 @@ a {
   z-index: 9999;
 }
 
-.toast-msg.show {
+.toast.show {
   opacity: 1;
 }
 

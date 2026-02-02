@@ -4,7 +4,7 @@
   font-weight: 400;
   font-display: swap;
   src: local("Pretendard Regular"), local("Pretendard-Regular"), url("/fonts/Pretendard-Regular.woff2") format("woff2"), url("/fonts/Pretendard-Regular.woff") format("woff"),
-    url("/fonts/Pretendard-Regular.ttf") format("truetype");
+  url("/fonts/Pretendard-Regular.ttf") format("truetype");
 }
 
 /* 전역 폰트 설정 */
@@ -124,7 +124,7 @@ a {
   background: #f2f2f2;
   color: #484848;
   border: none;
-  border-radius: 2px; /* 사각형 모서리 */
+  border-radius: 2px;
   cursor: pointer;
   transition: background 0.2s;
   font-size: 16px;
@@ -168,7 +168,7 @@ a {
   font-size: 16px;
 }
 
-/* — 서버 페이지: 버튼 공통 스타일 */
+/* – 서버 페이지: 버튼 공통 스타일 */
 .server-page .order-card .btn-delete,
 .server-page .order-card .btn-confirm-payment,
 .btn-serve-complete,
@@ -191,36 +191,30 @@ a {
   text-decoration-line: underline;
 }
 
-/* 송금 확인 버튼 (btn-confirm-payment) */
+/* 입금 확인 버튼 (btn-confirm-payment) */
 .server-page .order-card .btn-confirm-payment,
 .btn-serve-complete:enabled,
 .complete-order-btn {
   background: #007bff;
-  /* box-shadow: 0 4px 0 #0069da; */
   color: #fff;
 }
 .btn-serve-complete {
   display: block;
 }
 .btn-serve-complete:disabled {
-  background: #ddd; /* 연한 회색 배경 */
-  /* box-shadow: 0 4px 0 #c3c3c3; */
-  color: #777; /* 진하지 않은 회색 글자 */
-  cursor: not-allowed; /* 클릭 불가 커서 */
-  opacity: 1; /* opacity 조절 대신 배경·글자색으로 구분 */
+  background: #ddd;
+  color: #777;
+  cursor: not-allowed;
+  opacity: 1;
 }
 
 /* 서버 페이지: 체크박스 크게 */
-.server-page .serve-checkbox,
-.kitchen-page .cook-checkbox {
-  /* 1. 체크박스 크기 조정 */
-  transform: scale(1.5); /* 1.5배 확대 */
-  transform-origin: left; /* 위치 기준점 조정 (필요시) */
-
-  /* 2. 체크박스-라벨 간격 조정 */
-  margin-right: 8px; /* 체크박스 오른쪽 여백 */
-  /* 3. (선택) 체크 색상 변경 */
-  accent-color: #222; /* Chrome, Edge, Safari 지원 */
+.serve-checkbox,
+.cook-checkbox {
+  transform: scale(1.5);
+  transform-origin: left;
+  margin-right: 8px;
+  accent-color: #222;
 }
 .serve-checkbox:disabled + .item-text {
   color: #999;
@@ -245,40 +239,38 @@ a {
   margin-bottom: 4px;
 }
 
-/* 서버 페이지: 상단 탭 (송금확인, 서빙) */
-.server-tabs {
+/* 홀 페이지: 상단 탭 (입금확인, 서빙) */
+.hall-tabs {
   display: flex;
-  gap: 24px; /* 버튼 사이 여유 */
+  gap: 24px;
   background: #fff;
   position: sticky;
   top: 0;
   z-index: 100;
 }
-.server-tabs button {
+.hall-tabs a {
   flex: none;
   background: none;
   border: none;
-  padding: 12px 0; /* 위아래 여백만 */
+  padding: 12px 0;
   font-size: 18px;
   font-weight: 600;
   color: #737373;
   cursor: pointer;
-  position: relative; /* ::after 위치 기준 */
+  position: relative;
   transition: color 0.2s;
 }
-/* active 상태 텍스트 색 변경 */
-.server-tabs button.active {
+.hall-tabs a.active {
   color: #272727;
 }
 
-/* active 상태일 때 하단 언더라인 */
-.server-tabs button.active::after {
+.hall-tabs a.active::after {
   content: "";
   position: absolute;
   left: 0;
-  bottom: -1px; /* border-bottom 두께만큼 살짝 내려줌 */
+  bottom: -1px;
   width: 100%;
-  height: 2px; /* 언더라인 두께 */
+  height: 2px;
   background: #272727;
 }
 
@@ -401,6 +393,7 @@ a {
   font-size: 15px;
   margin: 18px 0;
 }
+
 /* 주문 내역 */
 .order-item {
   display: flex;
@@ -441,7 +434,7 @@ a {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px; /* 제목과 폼 사이 간격 */
+  margin-bottom: 14px;
 }
 
 .edit-header h3 {
@@ -450,7 +443,6 @@ a {
   font-weight: 700;
 }
 
-/* .edit-header flex로 자동 오른쪽 정렬 */
 .delete-text {
   padding: 4px;
   border: none;
@@ -458,7 +450,6 @@ a {
   font-size: 14px;
   font-weight: 700;
   color: red;
-
   text-decoration-line: underline;
   cursor: pointer;
 }
@@ -576,9 +567,7 @@ a {
   position: fixed;
   width: 100%;
   bottom: 5vw;
-  /* right: 10vw; */
   display: flex;
-  /* align-items: center; */
   justify-content: center;
   padding: 0;
 }
@@ -589,7 +578,7 @@ a {
   background: #222;
   border: none;
   font-size: 50px;
-  max-width: 50px; /* 버튼 너비 고정 */
+  max-width: 50px;
   height: 50px;
   display: flex;
   align-items: center;
@@ -605,7 +594,7 @@ a {
   background: #2e2e2e;
 }
 
-.toast-msg {
+.toast {
   position: fixed;
   bottom: 65px;
   left: 50%;
@@ -621,10 +610,222 @@ a {
   z-index: 9999;
 }
 
-.toast-msg.show {
+.toast.show {
   opacity: 1;
 }
 
 .hidden {
   display: none;
+}
+
+/* ========== 주문 관리 페이지 스타일 ========== */
+
+/* 주문 컨테이너 */
+.orders-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.orders-container h1 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+/* 주문 카드 공통 스타일 */
+.orders-container .order-card {
+  background: white;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 입금 확인 페이지 - 카드 색상 */
+.orders-container .order-card.pending {
+  border-color: #ffc107;
+}
+
+.orders-container .order-card.waiting {
+  border-color: #ff8c00;
+}
+
+/* 주방 페이지 - 카드 색상 */
+.orders-container .order-card.cooking {
+  border-color: #28a745;
+}
+
+/* 서빙 페이지 - 카드 색상 */
+.orders-container .order-card.serving {
+  border-color: #17a2b8;
+}
+
+/* 주문 헤더 */
+.orders-container .order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  /*border-bottom: 1px solid #eee;*/
+}
+
+/* 테이블 배지 */
+.table-badge {
+  background: #ff8c00;
+  color: white;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* 상태 배지 */
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: 10px;
+}
+
+.status-badge.status-pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.status-waiting {
+  background: #ffe5cc;
+  color: #cc5200;
+}
+
+.status-badge.status-cooking {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.status-serving {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+/* 주문 아이템 목록 */
+.orders-container .order-items {
+  margin: 15px 0;
+}
+
+.orders-container .order-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  /*border-bottom: 1px solid #f0f0f0;*/
+  font-size: 16px;
+}
+
+.orders-container .item-name {
+  font-weight: 500;
+}
+
+.orders-container .item-quantity {
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* 주방/서빙 페이지 전용 수량 색상 */
+.orders-container .order-card.cooking .item-quantity {
+  color: #28a745;
+}
+
+.orders-container .order-card.serving .item-quantity {
+  color: #17a2b8;
+}
+
+/* 주문 총액 */
+.orders-container .order-total {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ff8c00;
+  text-align: right;
+  margin: 15px 0;
+}
+
+/* 주문 액션 버튼 영역 */
+.orders-container .order-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+/* 버튼 공통 스타일 */
+.orders-container .btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+/* 입금 확인 버튼 */
+.orders-container .btn-confirm {
+  background: #28a745;
+  color: white;
+}
+
+.orders-container .btn-confirm:hover {
+  background: #218838;
+}
+
+/* 주문 취소 버튼 */
+.orders-container .btn-cancel {
+  background: #dc3545;
+  color: white;
+}
+
+.orders-container .btn-cancel:hover {
+  background: #c82333;
+}
+
+/* 조리/서빙 완료 버튼 */
+.orders-container .btn-complete {
+  width: 100%;
+  padding: 15px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.orders-container .order-card.cooking .btn-complete {
+  background: #28a745;
+  color: white;
+}
+
+.orders-container .order-card.cooking .btn-complete:hover {
+  background: #218838;
+}
+
+.orders-container .order-card.serving .btn-complete {
+  background: #17a2b8;
+  color: white;
+}
+
+.orders-container .order-card.serving .btn-complete:hover {
+  background: #138496;
+}
+
+/* 빈 상태 */
+.orders-container .empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+  font-size: 16px;
+}
+
+/* 타임스탬프 */
+.orders-container .timestamp {
+  color: #666;
+  font-size: 14px;
 }

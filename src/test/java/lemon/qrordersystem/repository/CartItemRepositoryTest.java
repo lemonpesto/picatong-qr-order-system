@@ -85,7 +85,7 @@ class CartItemRepositoryTest {
         CartItem cartItem = CartItem.builder()
                 .cart(cart)
                 .item(item)
-                .count(quantity)
+                .quantity(quantity)
                 .build();
         em.persist(cartItem);
         return cartItem;

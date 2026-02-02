@@ -14,7 +14,7 @@ async function updateInfo() {
     const data = await res.json();
 
     const total = typeof data.total === "number" ? data.total : 0;
-    const count = typeof data.count === "number" ? data.count : 0;
+    const quantity = typeof data.quantity === "number" ? data.quantity : 0;
 
     const noticeSection = document.querySelector(".inline-action");
     const cartSection = document.querySelector(".cart-section");
@@ -22,10 +22,10 @@ async function updateInfo() {
     const totalQtySpan = document.querySelector(".total-qty");
     const orderBtn = document.getElementById("order");
 
-    totalQtySpan.innerHTML = `선택한 메뉴 <span class="highlight">${count}</span>개`;
+    totalQtySpan.innerHTML = `선택한 메뉴 <span class="highlight">${quantity}</span>개`;
 
-    if (count > 0) {
-      orderBtn.innerHTML = `총 ${total.toLocaleString()}원 주문하기 (${count})`;
+    if (quantity > 0) {
+      orderBtn.innerHTML = `총 ${total.toLocaleString()}원 주문하기 (${quantity})`;
       cartSection.classList.remove("hidden");
       secDiv.classList.remove("hidden");
       orderBtn.classList.remove("hidden");

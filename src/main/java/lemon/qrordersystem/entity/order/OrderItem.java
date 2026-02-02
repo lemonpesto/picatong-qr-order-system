@@ -1,15 +1,13 @@
 package lemon.qrordersystem.entity.order;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lemon.qrordersystem.entity.item.Item;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "orders_item")
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -21,19 +19,28 @@ public class OrderItem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
-//    @JsonIgnore
     private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id", nullable = false)
-//    @JsonIgnore
     private Item item;
 
     private int orderPrice; // 주문 당시 가격
     private int quantity; // 주문 수량
 
+    @Builder.Default
+    private Boolean cooked = false; // 조리 완료 여부
+
     public void setOrder(Order order) {
         this.order = order;
         order.getOrderItems().add(this);
+    }
+
+    public void markAsCooked() {
+        this.cooked = true;
+    }
+
+    public void markAsUncooked() {
+        this.cooked = false;
     }
 }

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${pageTitle}">관리자 페이지</title>
+
+    <link rel="stylesheet" th:href="@{/css/admin.css}" />
+
+    <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<!-- 공통 사이드바 & 상단바 -->
+<div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+
+<div class="topbar">
+    <i class="fas fa-bars" id="nav-bars"></i>
+    <span class="page-title" th:text="${pageTitle}">관리자 페이지</span>
+</div>
+
+<!-- 공통 토스트 메시지 -->
+<div th:replace="~{fragments/toast :: toast}"></div>
+<!-- 공통 사이드바 & 상단바 끝 -->
+
+<div class="edit-page">
+    <h3>새 메뉴 등록</h3>
+
+    <form th:action="@{/admin/items/new}" method="post">
+        <label for="name">아이템 이름 *</label>
+        <input type="text" id="name" name="name" required />
+
+        <label for="price">가격 *</label>
+        <input type="number" id="price" name="price" min="0" required />
+
+        <label for="categoryId">카테고리 *</label>
+        <select id="categoryId" name="categoryId" required>
+            <option value="">선택하세요</option>
+            <option th:each="cat : ${categories}"
+                    th:value="${cat.id}"
+                    th:text="${cat.name}">
+                ==카테고리 선택==
+            </option>
+        </select>
+
+        <label for="isActive">상태 *</label>
+        <select id="isActive" name="isActive" required>
+            <option value="true">판매 중</option>
+            <option value="false">품절</option>
+        </select>
+
+        <label for="description">설명</label>
+        <textarea id="description" name="description" rows="3"></textarea>
+
+        <button type="submit" class="save-btn">등록</button>
+        <a th:href="@{/admin/items}" class="cancel-btn" style="display: block; text-align: center; margin-top: 10px;">취소</a>
+    </form>
+</div>
+
+<!-- 공통 스크립트 -->
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<script th:src="@{/js/admin-sidebar.js}"></script>
+<script th:src="@{/js/toast.js}"></script>
+<!-- 공통 스크립트 끝 -->
+</body>
+</html>
