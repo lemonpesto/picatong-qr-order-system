@@ -18,7 +18,7 @@ import java.util.Map;
 @RequestMapping("/admin/orders")
 @RequiredArgsConstructor
 public class AdminOrderController {
-    
+
     private final OrderService orderService;
     private final TableRepository tableRepository;
 
@@ -71,6 +71,28 @@ public class AdminOrderController {
     }
 
     /* 서빙 처리 */
+
+    /**
+     * 개별 아이템 서빙 완료 처리 (AJAX)
+     */
+    @PostMapping("/{orderId}/items/{orderItemId}/serve")
+    @ResponseBody
+    public Map<String, Object> serveItem(@PathVariable Long orderId,
+                                         @PathVariable Long orderItemId) {
+        orderService.markItemAsServed(orderId, orderItemId);
+        return Map.of("success", true);
+    }
+
+    /**
+     * 개별 아이템 서빙 취소 처리 (AJAX)
+     */
+    @PostMapping("/{orderId}/items/{orderItemId}/unserve")
+    @ResponseBody
+    public Map<String, Object> unserveItem(@PathVariable Long orderId,
+                                           @PathVariable Long orderItemId) {
+        orderService.markItemAsUnserved(orderId, orderItemId);
+        return Map.of("success", true);
+    }
 
     /**
      * 서빙 완료 처리

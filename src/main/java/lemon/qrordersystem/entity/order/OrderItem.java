@@ -28,8 +28,14 @@ public class OrderItem {
     private int orderPrice; // 주문 당시 가격
     private int quantity; // 주문 수량
 
+
     @Builder.Default
+    @Column(nullable = false)
     private Boolean cooked = false; // 조리 완료 여부
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean served = false;  // 서빙 완료 여부
 
     public void setOrder(Order order) {
         this.order = order;
@@ -42,5 +48,13 @@ public class OrderItem {
 
     public void markAsUncooked() {
         this.cooked = false;
+    }
+
+    public void markAsServed() {
+        this.served = true;
+    }
+
+    public void markAsUnserved() {
+        this.served = false;
     }
 }
