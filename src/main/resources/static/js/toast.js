@@ -1,12 +1,17 @@
-// toast.js
-(function () {
-  const toasts = document.querySelectorAll(".toast");
+let toastTimer = null;
 
-  toasts.forEach(function (toast) {
-    toast.classList.add("show");
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
 
-    setTimeout(function () {
-      toast.classList.remove("show");
-    }, 2000);
-  });
-})();
+  const msg = String(message ?? '').trim();
+  if (!msg) return;              // 빈 메시지는 표시하지 않기
+
+  toast.textContent = msg;
+  toast.classList.add('show');
+
+  if (toastTimer) clearTimeout(toastTimer);  // 연속 호출 시 타이머 정리
+  toastTimer = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 2000);
+}

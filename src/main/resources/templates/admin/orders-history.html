@@ -5,61 +5,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title th:text="${pageTitle}">관리자 페이지</title>
 
-    <link rel="stylesheet" th:href="@{/css/admin.css}" />
-
+    <link rel="stylesheet" th:href="@{/css/admin-unified.css}" />
     <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
 </head>
-<body>
 
+<body class="admin">
 <!-- 공통 사이드바 -->
 <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
 
-<div class="topbar">
-    <i class="fas fa-bars" id="nav-bars"></i>
-    <span class="page-title" th:text="${pageTitle}">관리자 페이지</span>
-</div>
+<header class="admin-topbar">
+    <i class="fas fa-bars admin-topbar__toggle" id="nav-bars"></i>
+    <span class="admin-topbar__title" th:text="${pageTitle}">관리자 페이지</span>
+</header>
 <!-- 공통 사이드바 & 상단바 끝 -->
 
-<div class="orders-container">
+<main class="admin-container">
+    <section id="history-list" class="admin-order__list">
+        <article th:each="order : ${orders}"
+                 class="admin-card admin-card--soft"
+                 th:attr="data-table=${order.table.tableNum}">
 
-    <!-- 주문 목록 -->
-    <div class="order-list">
-        <div th:each="order : ${orders}"
-             class="order-card"
-             th:attr="data-table=${order.table.tableNum}">
-
-            <div class="order-header">
-                <div class="left-header">
-                    <span class="table-num" th:text="'테이블 ' + ${order.table.tableNum}">테이블 1</span>
-                    <span class="time" th:text="${#temporals.format(order.createdAt, 'MM/dd HH:mm')}">
+            <div class="admin-card__header admin-order__header">
+                <div class="admin-order__left">
+                    <span class="admin-order__table" th:text="'테이블 ' + ${order.table.tableNum}">테이블 1</span>
+                    <span class="admin-card__meta" th:text="${#temporals.format(order.createdAt, 'MM/dd HH:mm')}">
                         01/20 12:34
                     </span>
                 </div>
-                <div class="right-header">
-                    <span class="order-status"
-                          th:classappend="${order.status.name() == 'COMPLETED'} ? 'status-served' : 'status-pending'"
-                          th:text="${order.status.name() == 'COMPLETED'} ? '완료' : '대기'">
-                        완료
-                    </span>
-                </div>
+
+                <span class="admin-order__status"
+                      th:classappend="${ order.status.name() == 'COMPLETED' } ? 'completed' : (${order.status.name() == 'CANCELLED'} ? 'cancelled' : '')"
+                      th:text="${order.status.description}">
+                    상태
+                </span>
             </div>
 
-            <ul class="items-list">
-                <li th:each="item : ${order.orderItems}" class="order-item">
-                    <span th:text="${item.item.name}">메뉴명</span>
-                    <span th:text="${item.quantity} + '개'">1개</span>
+            <ul class="admin-order__items">
+                <li th:each="oi : ${order.orderItems}" class="admin-order__itemline">
+                    <span class="admin-order__itemname" th:text="${oi.item.name}">아이템명</span>
+                    <span>
+                        <span th:text="${oi.quantity}">1</span>개 ×
+                        <span th:text="${#numbers.formatInteger(oi.orderPrice, 0, 'COMMA')}">10,000</span>원
+                    </span>
                 </li>
             </ul>
 
-            <div class="order-footer">
-                <span>총액</span>
-                <span th:text="${#numbers.formatInteger(order.totalAmount, 0, 'COMMA')} + '원'">
-                    10,000원
-                </span>
+            <div class="admin-order__total">
+                총&nbsp;<span th:text="${#numbers.formatInteger(order.totalAmount, 0, 'COMMA')} + '원'">10,000원</span>
             </div>
-        </div>
-    </div>
-</div>
+        </article>
+    </section>
+</main>
 
 <!-- 공통 스크립트 -->
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
@@ -70,10 +66,9 @@
 <!-- 공통 스크립트 끝 -->
 
 <script>
-
-    // 테이블 필터링
+    // (옵션) 테이블 필터링 UI가 생겼을 때를 대비해 남겨둠.
     const filterBtns = document.querySelectorAll('.filter-btn');
-    const orderCards = document.querySelectorAll('.order-card');
+    const orderCards = document.querySelectorAll('[data-table]');
 
     filterBtns.forEach(btn => {
         btn.addEventListener('click', () => {

@@ -5,65 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title th:text="${pageTitle}">관리자 페이지</title>
 
-    <link rel="stylesheet" th:href="@{/css/admin.css}"/>
-
+    <link rel="stylesheet" th:href="@{/css/admin-unified.css}" />
     <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
 </head>
-<body>
 
+<body class="admin">
 <!-- 공통 사이드바 -->
 <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
 
-<div class="topbar">
-    <i class="fas fa-bars" id="nav-bars"></i>
-    <span class="page-title" th:text="${pageTitle}">관리자 페이지</span>
-</div>
+<header class="admin-topbar">
+    <i class="fas fa-bars admin-topbar__toggle" id="nav-bars"></i>
+    <span class="admin-topbar__title" th:text="${pageTitle}">관리자 페이지</span>
+</header>
 
 <div th:replace="~{fragments/toast :: toast}"></div>
 <!-- 공통 사이드바 & 상단바 끝 -->
 
-<div class="kitchen-page">
-    <div class="order-list">
-        <div th:if="${orders.isEmpty()}" class="inline-action">
+<main class="admin-container" style="padding-top:16px;">
+    <section class="admin-order__list">
+        <div th:if="${orders.isEmpty()}" class="admin-empty">
             <p>조리할 주문이 없습니다</p>
         </div>
 
-        <div th:each="order : ${orders}"
-             class="order-card"
-             th:attr="data-order-id=${order.orderId}">
+        <article th:each="order : ${orders}"
+                 class="admin-card admin-card--soft js-kitchen-card"
+                 th:attr="data-order-id=${order.orderId}">
 
-            <div class="order-header">
-                <span class="table-num" th:text="'테이블 ' + ${order.tableNum}">테이블 1</span>
-                <span class="time"
-                      th:text="${order.confirmedAt != null ? #temporals.format(order.confirmedAt, 'HH:mm:ss') : '-'}">12:34:56</span>
+            <div class="admin-card__header admin-order__header">
+                <span class="admin-order__table" th:text="'테이블 ' + ${order.tableNum}">테이블 1</span>
+                <span class="admin-card__meta"
+                      th:text="${order.confirmedAt != null ? #temporals.format(order.confirmedAt, 'HH:mm:ss') : '-'}">
+                    12:34:56
+                </span>
             </div>
 
-            <ul class="order-items">
-                <li th:each="oi : ${order.manufacturedItems}">
-                    <label class="kitchen-item">
+            <ul class="admin-checklist">
+                <li class="admin-checklist__row" th:each="oi : ${order.manufacturedItems}">
+                    <label class="admin-checklist__label">
                         <input type="checkbox"
-                               class="cook-checkbox"
+                               class="admin-checklist__checkbox js-cook-checkbox"
                                th:checked="${oi.cooked}"
                                th:attr="data-order-id=${order.orderId}, data-order-item-id=${oi.id}"
                                onchange="toggleCooked(this)"/>
-                        <span class="item-text">
-                            <span th:text="${oi.item.name}">메뉴명</span>
-                            <span th:text="${oi.quantity} + '개'">1개</span>
+                        <span class="admin-checklist__text">
+                            <span class="admin-checklist__name" th:text="${oi.item.name}">메뉴명</span>
+                            <span class="admin-checklist__qty" th:text="${oi.quantity} + '개'">1개</span>
                         </span>
                     </label>
                 </li>
             </ul>
 
-            <div class="kitchen-order-footer">
-                <button class="complete-order-btn"
-                        th:attr="data-order-id=${order.orderId}"
-                        onclick="completeOrder(this)">
-                    조리 완료
-                </button>
+            <div style="margin-top:12px;">
+                <form th:action="@{/admin/kitchen/orders/{orderId}/complete(orderId=${order.orderId})}" method="post">
+                    <button type="submit"
+                            class="btn btn--dark js-btn-complete"
+                            th:attr="data-order-id=${order.orderId}"
+                            onclick="return confirm('조리가 완료되었습니까?')">
+                        조리 완료
+                    </button>
+                </form>
             </div>
-        </div>
-    </div>
-</div>
+        </article>
+    </section>
+</main>
 
 <!-- 공통 스크립트 -->
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
@@ -86,41 +90,25 @@
     * Utils
     * ========================================================= */
     const safeJson = (str) => {
-        try {
-            return JSON.parse(str);
-        } catch {
-            return null;
-        }
+        try { return JSON.parse(str); } catch { return null; }
     };
 
     const postJson = async (url) => {
         const res = await fetch(url, {method: 'POST'});
-
-        // 서버가 JSON이 아닌 응답을 줄 가능성 대비
         const text = await res.text();
         const data = safeJson(text);
 
-        if (!res.ok) {
-            throw new Error(data?.message || text || `HTTP ${res.status}`);
-        }
-        if (!data) {
-            throw new Error('서버 응답이 올바르지 않습니다.');
-        }
+        if (!res.ok) throw new Error(data?.message || text || `HTTP ${res.status}`);
+        if (!data) throw new Error('서버 응답이 올바르지 않습니다.');
         return data;
     };
 
-    /**
-     * 연타 방지 - 요청 처리 중 버튼/체크박스를 비활성화하고 끝나면 원상복구
-     */
     const disableWhile = async (el, fn) => {
         if (!el) return fn();
         const prev = el.disabled;
         el.disabled = true;
-        try {
-            return await fn();
-        } finally {
-            el.disabled = prev;
-        }
+        try { return await fn(); }
+        finally { el.disabled = prev; }
     };
 
     /* =========================================================
@@ -131,104 +119,52 @@
         const stomp = Stomp.over(socket);
         stomp.debug = null;
 
-        /**
-         * 입금 확인된 주문이 새로 생겼을 때 reload
-         */
         stomp.connect({}, () => {
             stomp.subscribe(WS.topic, (message) => {
                 const evt = safeJson(message.body);
-                // 파싱 실패/예외 상황 포함해서 안전하게 reload
                 if (!evt || evt.type === 'RELOAD') window.location.reload();
             });
         });
 
         window.addEventListener('beforeunload', () => {
-            try {
-                stomp.disconnect();
-            } catch (e) {
-            }
+            try { stomp.disconnect(); } catch (e) {}
         });
     };
 
     /* =========================================================
     * Handlers
     * ========================================================= */
-    /**
-     * 체크박스 변경 시
-     * - 해당 주문 아이템의 조리 완료/취소를 서버에 반영하고
-     * - 실패하면 체크 상태를 되돌림
-     */
     const toggleCooked = async (checkbox) => {
         const orderId = checkbox?.getAttribute('data-order-id');
         const orderItemId = checkbox?.getAttribute('data-order-item-id');
-        const isCooked = !!checkbox?.checked; // bool 반환
+        const isCooked = !!checkbox?.checked;
 
         if (!orderId || !orderItemId || !checkbox) return;
 
         const url = isCooked
-            ? `/admin/kitchen/orders/${orderId}/items/${orderItemId}/cook` // 조리 완료로 체크
-            : `/admin/kitchen/orders/${orderId}/items/${orderItemId}/uncook`; // 조리 완료 취소로 체크
+            ? `/admin/kitchen/orders/${orderId}/items/${orderItemId}/cook`
+            : `/admin/kitchen/orders/${orderId}/items/${orderItemId}/uncook`;
 
         await disableWhile(checkbox, async () => {
             try {
                 const result = await postJson(url);
-
                 if (!result.success) {
                     alert('처리 실패: ' + (result.message || 'unknown'));
-                    checkbox.checked = !isCooked; // 원상복구
+                    checkbox.checked = !isCooked;
                 }
             } catch (err) {
                 console.error(err);
                 alert('오류가 발생했습니다: ' + (err?.message || err));
-                checkbox.checked = !isCooked; // 원상복구
+                checkbox.checked = !isCooked;
             }
         });
     };
 
-    /**
-     * 조리 완료 버튼 클릭 시
-     * - 주문 전체 완료 처리 요청을 보내고
-     * - 성공하면 주문카드 UI 제거
-     */
-    const completeOrder = async (button) => {
-        const orderId = button?.getAttribute('data-order-id');
-        if (!orderId || !button) return;
-
-        if (!confirm('조리가 완료되었습니까?')) return;
-
-        await disableWhile(button, async () => {
-            try {
-                const result = await postJson(`/admin/kitchen/orders/${orderId}/complete`);
-
-                if (!result.success) {
-                    alert('처리 실패: ' + (result.message || 'unknown'));
-                    return;
-                }
-
-                // 성공 시 카드 제거 애니메이션
-                const card = button.closest('.order-card');
-                if (card) {
-                    card.style.transition = 'opacity 0.3s';
-                    card.style.opacity = '0';
-                    setTimeout(() => card.remove(), 300);
-                }
-            } catch (err) {
-                console.error(err);
-                alert('오류가 발생했습니다: ' + (err?.message || err));
-            }
-        });
-    };
-
-    /* =========================================================
-    * Entry
-    * ========================================================= */
     document.addEventListener('DOMContentLoaded', () => {
         connectKitchenReloadWs();
     });
 
-    // 인라인 이벤트 핸들러에서 호출 가능하도록 전역 노출
     window.toggleCooked = toggleCooked;
-    window.completeOrder = completeOrder;
 </script>
 </body>
 </html>

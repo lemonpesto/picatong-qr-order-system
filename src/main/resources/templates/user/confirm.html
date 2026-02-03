@@ -5,24 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>결제확인</title>
 
-    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/user-unified.css" />
     <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
 </head>
 
-<body>
-<div th:replace="~{fragments/nav :: nav(${navTitle}, @{/items}, ${tableNum})}"></div>
+<body class="user">
+<div th:replace="~{fragments/nav :: nav(${navTitle}, null, ${tableNum}, false)}"></div>
 
-<div class="confirm-container">
-    <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: #ff8c00"></i>
-    <h3>운영진이 입금 내역을 확인 중이니<br />잠시만 기다려주세요!</h3>
-    <span class="confirm-subtext">
-        * 만약 주문 접수 창이 계속 뜨지 않는다면<br />
-        운영진을 불러주세요
-    </span>
+<div class="user-center">
+    <section class="user-center__content">
+        <i class="fas fa-spinner fa-spin user-confirm__spinner"></i>
+        <h3 class="user-center__title">운영진이 입금 내역을 확인 중이니<br />잠시만 기다려주세요!</h3>
+        <span class="user-confirm__hint">
+            * 만약 주문 접수 창이 계속 뜨지 않는다면<br />
+            운영진을 불러주세요
+        </span>
+    </section>
 </div>
+
 
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script th:src="@{/js/toast.js}"></script>
 
 <script th:inline="javascript">
     const tableId = /*[[${tableId}]]*/ null;

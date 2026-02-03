@@ -5,42 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>피카통 오더</title>
 
-    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/user-unified.css" />
     <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
 </head>
 
-<body>
-<div th:replace="~{fragments/nav :: nav(${navTitle}, @{/items}, ${tableNum})}"></div>
+<body class="user">
+<div th:replace="~{fragments/nav :: nav(${navTitle}, ${navBack}, ${tableNum}, true)}"></div>
 
-<div class="orders-container">
-    <p class="no-orders" th:if="${orders == null || #lists.isEmpty(orders)}">주문 내역이 없습니다.</p>
+<div class="user-orders">
+    <p class="user-orders__empty" th:if="${orders == null || #lists.isEmpty(orders)}">주문 내역이 없습니다.</p>
 
     <div th:if="${orders != null && !#lists.isEmpty(orders)}">
-        <div class="order-section" th:each="order, st : ${orders}">
-            <div class="order-card">
-                <div class="section-header">
-                    <span class="section-title" th:text="${st.index == 0} ? '최근 주문' : '이전 주문'">최근 주문</span>
-                    <span class="order-time" th:text="${#temporals.format(order.createdAt, 'HH:mm')}">00:00</span>
+        <section class="user-orders__section" th:each="order, st : ${orders}">
+            <div class="user-orders__card">
+                <div class="user-orders__head">
+                    <span class="user-orders__label" th:text="${st.index == 0} ? '최근 주문' : '이전 주문'">최근 주문</span>
+                    <span class="user-orders__time" th:text="${#temporals.format(order.createdAt, 'HH:mm')}">00:00</span>
                 </div>
 
-                <!-- 주문 아이템들 -->
-                <div class="order-item" th:each="oi : ${order.orderItems}">
-                    <div class="left-item">
-                <span class="item-name"
-                      th:text="${oi.item.name} + ' x' + ${oi.quantity}">메뉴 x1</span>
-                    </div>
-
-                    <span class="item-price"
+                <div class="user-orders__item" th:each="oi : ${order.orderItems}">
+                    <span class="user-orders__itemname"
+                          th:text="${oi.item.name} + ' x' + ${oi.quantity}">메뉴 x1</span>
+                    <span class="user-orders__itemprice"
                           th:text="${#numbers.formatInteger(oi.orderPrice * oi.quantity, 0, 'COMMA')} + '원'">0원</span>
                 </div>
 
-                <div class="order-footer">
-                    <span>합계</span>
-                    <span class="order-total"
+                <div class="user-orders__foot">
+                    <span class="user-orders__total">합계</span>
+                    <span class="user-orders__total u-highlight"
                           th:text="${#numbers.formatInteger(order.totalAmount, 0, 'COMMA')} + '원'">0원</span>
                 </div>
             </div>
-        </div>
+        </section>
     </div>
 </div>
 </body>

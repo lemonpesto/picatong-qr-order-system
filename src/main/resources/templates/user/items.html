@@ -5,18 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>메뉴판</title>
 
-    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/user-unified.css" />
     <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
 </head>
 
-<body>
+<body class="user">
 <!-- nav -->
-<div th:replace="~{fragments/nav :: nav(null, null, ${tableNum})}"></div>
+<div th:replace="~{fragments/nav :: nav(null, null, ${tableNum}, true)}"></div>
 
 <!-- 카테고리 목차 -->
-<div class="category-bar" th:if="${!#lists.isEmpty(categories)}">
+<div class="user-tabs" th:if="${!#lists.isEmpty(categories)}">
     <button
-            class="category-button"
+            class="user-tabs__btn js-category-btn"
             th:each="cat : ${categories}"
             th:attr="data-target=${'section-' + cat.id}"
             th:text="${cat.name}"
@@ -25,131 +25,119 @@
     </button>
 </div>
 
-<div class="callout-container">
-    <div class="menu-callout">
-        <i class="fa-solid fa-bullhorn callout-icon"></i>
-        <span class="callout-text">최초 주문 시 안주를 포함하여 만 원 이상 주문 필수입니다!</span>
+<div class="user-callouts">
+    <div class="user-callout">
+        <i class="fa-solid fa-bullhorn user-callout__icon"></i>
+        <span class="user-callout__text">최초 주문 시 안주를 포함하여 만 원 이상 주문 필수입니다!</span>
     </div>
-    <div class="menu-callout">
-        <i class="fa-solid fa-bullhorn callout-icon"></i>
-        <span class="callout-text">주방은 23시에, 칵테일은 23시 30분에 마감됩니다.</span>
+    <div class="user-callout">
+        <i class="fa-solid fa-bullhorn user-callout__icon"></i>
+        <span class="user-callout__text">주방은 23시에, 칵테일은 23시 30분에 마감됩니다.</span>
     </div>
 </div>
 
 <!-- 메뉴 리스트 -->
-<div th:if="${#lists.isEmpty(categories)}" class="list-box">
-    <p>카테고리가 없습니다.</p>
+<div th:if="${#lists.isEmpty(categories)}" class="user-container">
+    <p class="u-muted">카테고리가 없습니다.</p>
 </div>
 
 <div th:each="cat, cstat : ${categories}">
-    <div th:attr="id=${'section-' + cat.id}" class="menu-section">
-        <h3 th:text="${cat.name}">카테고리명</h3>
+    <section th:attr="id=${'section-' + cat.id}" class="user-menu__section">
+        <h3 class="user-menu__title" th:text="${cat.name}">카테고리명</h3>
 
         <!-- 카테고리에 속한 아이템들만 출력 -->
         <div th:each="it, istat : ${items}" th:if="${it.category != null and it.category.id == cat.id}">
             <div
-                    class="list-box menu-box"
-                    th:classappend="${it.isActive} ? '' : ' sold-out'"
-                    th:attr="
-                      data-itemid=${it.id},
-                      data-name=${it.name},
-                      data-price=${it.price}
-                    "
+                    class="user-menu__card js-menu-card"
+                    th:classappend="${it.isActive} ? '' : ' user-menu__card--soldout'"
+                    th:attr="data-itemid=${it.id}, data-name=${it.name}, data-price=${it.price}"
             >
-                <h4 th:text="${it.isActive} ? ${it.name} : ${'(품절) ' + it.name}">
+                <h4 class="user-menu__name"
+                    th:text="${it.isActive} ? ${it.name} : ${'(품절) ' + it.name}">
                     메뉴명
                 </h4>
 
-                <p class="price">
+                <p class="user-menu__price">
                     <span th:text="${#numbers.formatInteger(it.price, 0, 'COMMA')}">0</span>원
                 </p>
 
-                <p class="description" th:text="${it.description != null ? it.description : ''}">
-                    설명
-                </p>
+                <p class="user-menu__desc" th:text="${it.description != null ? it.description : ''}">설명</p>
             </div>
 
-            <div class="menu-divider" th:if="${!istat.last}"></div>
+            <span class="u-divider u-divider--hair" th:if="${!istat.last}"></span>
         </div>
-    </div>
+    </section>
 
-    <div class="section-divider" th:if="${!cstat.last}"></div>
+    <span class="u-divider" th:if="${!cstat.last}"></span>
 </div>
 
 <!-- 장바구니 보기 버튼 -->
-<div class="bottom-bar">
-    <a href="/cart" id="view-cart" class="bottom-button hidden">장바구니 보기</a>
+<div class="user-bottombar">
+    <a href="/cart" id="view-cart" class="u-btn u-btn--primary user-bottombar__btn u-hidden">장바구니 보기</a>
 </div>
 
 <!-- 바텀 시트 -->
-<div id="bottom-sheet" class="bottom-sheet hidden">
-    <div class="bottom-sheet-content">
-        <div class="sheet-header">
-            <h4 id="sheet-name">메뉴명</h4>
-            <button id="close-sheet">✕</button>
+<div id="bottom-sheet" class="user-sheet u-hidden">
+    <div class="user-sheet__content">
+        <div class="user-sheet__header">
+            <h4 id="sheet-name" class="user-sheet__title">메뉴명</h4>
+            <button id="close-sheet" class="user-sheet__close" aria-label="close">✕</button>
         </div>
 
-        <div class="sheet-subheader">
+        <div class="user-sheet__sub">
             <span id="sheet-price">단가</span>
         </div>
 
-        <div class="sheet-body">
-            <div class="qty-row">
-                <span class="qty-label">수량</span>
-                <div class="qty-control">
-                    <button id="minus" class="qty-btn" disabled>
-                        <i class="fa-solid fa-minus fa-2xs"></i>
+        <div class="user-sheet__body">
+            <div class="user-sheet__row">
+                <span class="user-sheet__label">수량</span>
+                <div class="user-qty">
+                    <button id="minus" class="user-qty__btn" disabled>
+                        <i class="fa-solid fa-minus"></i>
                     </button>
-                    <span id="qty" class="qty">1</span>
-                    <button id="plus" class="qty-btn">
-                        <i class="fa-solid fa-plus fa-2xs"></i>
+                    <span id="qty" class="user-qty__value">1</span>
+                    <button id="plus" class="user-qty__btn">
+                        <i class="fa-solid fa-plus"></i>
                     </button>
                 </div>
             </div>
 
-            <div id="comment-row" class="comment-row" style="display:none">
-                <label for="sheet-comment">요청사항</label>
+            <div id="comment-row" class="user-sheet__comment" style="display:none">
+                <label for="sheet-comment" class="user-sheet__label">요청사항</label>
                 <input id="sheet-comment" type="text" placeholder="예: 덜 달게, 상큼하게 등" maxlength="50" />
             </div>
         </div>
 
-        <button id="add-to-cart" class="cart-button">0원 장바구니에 담기</button>
+        <button id="add-to-cart" class="u-btn u-btn--primary">0원 장바구니에 담기</button>
     </div>
 </div>
 
 <div id="toast" class="toast"></div>
-<div id="overlay" class="overlay hidden"></div>
+<div id="overlay" class="user-overlay u-hidden"></div>
+<script th:src="@{/js/toast.js}"></script>
 
 <!-- WebSocket libs -->
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 
+
 <script th:inline="javascript">
-    // ============================================
-    // Vars
-    // ============================================
     const tableId = /*[[${tableId}]]*/ null;
 
     let currItemId = null;
     let currPrice = 0;
     let qty = 1;
 
-    // WS clients (nav / cart)
     let navStomp = null;
     let cartStomp = null;
     let itemUpdateStomp = null;
 
-    // ============================================
-    // Init
-    // ============================================
     document.addEventListener("DOMContentLoaded", () => {
         bindCategoryScroll();
         bindBottomSheet();
 
-        // 초기 1회: 현재 summary로 버튼 표시
         refreshCartSummaryFromServer();
 
-        // WS 연결
         connectNavTopic();
         connectCartTopic();
         connectItemUpdateTopic();
@@ -161,16 +149,6 @@
         try { itemUpdateStomp?.disconnect(); } catch (e) {}
     });
 
-    // bottom-bar sticky/fixed
-    window.addEventListener("resize", () => {
-        const bar = document.querySelector(".bottom-bar");
-        if (!bar) return;
-        bar.style.position = document.body.scrollHeight > window.innerHeight ? "sticky" : "fixed";
-    });
-
-    // ============================================
-    // WebSocket: NAV (/topic/tables/{tableId}/nav)
-    // ============================================
     function connectNavTopic() {
         if (!tableId) return;
 
@@ -194,10 +172,6 @@
         });
     }
 
-    // ============================================
-    // WebSocket: CART (/topic/tables/{tableId}/cart)
-    // - 부분 갱신: "장바구니 보기 버튼 요약"만 업데이트
-    // ============================================
     function connectCartTopic() {
         if (!tableId) return;
 
@@ -210,19 +184,13 @@
                 const evt = safeJson(frame.body);
                 if (!evt || evt.type !== "CART_UPDATED") return;
 
-                // evt.data = { summary, items }
                 const summary = evt.data?.summary;
-                if (summary) {
-                    renderCartButton(summary);
-                } else {
-                    // 혹시 포맷이 바뀌면 안전하게 재조회
-                    refreshCartSummaryFromServer();
-                }
+                if (summary) renderCartButton(summary);
+                else refreshCartSummaryFromServer();
             });
         });
     }
 
-    // ==== 관리자가 메뉴 수정 시 ====
     function connectItemUpdateTopic() {
         const socket = new SockJS("/ws");
         itemUpdateStomp = Stomp.over(socket);
@@ -233,7 +201,7 @@
                 const evt = safeJson(frame.body);
                 if (!evt || evt.type !== "ITEM_UPDATED") return;
 
-                const it = evt.data; // { itemId, name, price, isActive, description }
+                const it = evt.data;
                 applyItemUpdateToItemsPage(it);
                 showToast("메뉴 정보가 업데이트되었습니다.");
             });
@@ -241,37 +209,31 @@
     }
 
     function applyItemUpdateToItemsPage(it) {
-        // menu-box는 data-itemid로 식별 가능
-        const box = document.querySelector(`.menu-box[data-itemid="${String(it.itemId)}"]`);
-        if (!box) return; // 현재 화면에 없는 아이템이면 무시
+        const box = document.querySelector(`.js-menu-card[data-itemid="${String(it.itemId)}"]`);
+        if (!box) return;
 
-        // 품절 표시/클릭 막기
-        if (!it.isActive) box.classList.add("sold-out");
-        else box.classList.remove("sold-out");
+        if (!it.isActive) box.classList.add("user-menu__card--soldout");
+        else box.classList.remove("user-menu__card--soldout");
 
-        // 제목(품절 prefix 포함)
-        const h4 = box.querySelector("h4");
-        if (h4) {
-            h4.textContent = it.isActive ? it.name : `(품절) ${it.name}`;
-        }
+        const h4 = box.querySelector(".user-menu__name");
+        if (h4) h4.textContent = it.isActive ? it.name : `(품절) ${it.name}`;
 
-        // 가격
-        const priceSpan = box.querySelector(".price span");
+        const priceSpan = box.querySelector(".user-menu__price span");
         if (priceSpan) priceSpan.textContent = Number(it.price).toLocaleString("ko-KR");
 
-        // description도 바꿔야..
+        const desc = box.querySelector(".user-menu__desc");
+        if (desc) desc.textContent = it.description ?? "";
 
-        // dataset도 갱신(바텀시트에서 사용)
         box.dataset.name = it.name;
         box.dataset.price = String(it.price);
     }
 
-    // ============================================
-    // UI: Category scroll
-    // ============================================
     function bindCategoryScroll() {
-        document.querySelectorAll(".category-button").forEach((btn) => {
+        document.querySelectorAll(".js-category-btn").forEach((btn) => {
             btn.addEventListener("click", () => {
+                document.querySelectorAll(".js-category-btn").forEach(b => b.classList.remove("user-tabs__btn--active"));
+                btn.classList.add("user-tabs__btn--active");
+
                 const id = btn.dataset.target;
                 const section = document.getElementById(id);
                 if (section) section.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -279,38 +241,22 @@
         });
     }
 
-    // ============================================
-    // UI: Bottom sheet
-    // ============================================
     function bindBottomSheet() {
-        // 아이템 클릭 시 open
-        document.querySelectorAll(".menu-box").forEach((box) => {
+        document.querySelectorAll(".js-menu-card").forEach((box) => {
             box.addEventListener("click", () => openBottomSheet(box));
         });
 
-        // 닫기
         document.getElementById("close-sheet").addEventListener("click", closeBottomSheet);
         document.getElementById("overlay").addEventListener("click", closeBottomSheet);
 
-        // 수량 +
-        document.getElementById("plus").addEventListener("click", () => {
-            qty++;
-            updateQtyUI();
-        });
+        document.getElementById("plus").addEventListener("click", () => { qty++; updateQtyUI(); });
+        document.getElementById("minus").addEventListener("click", () => { if (qty <= 1) return; qty--; updateQtyUI(); });
 
-        // 수량 -
-        document.getElementById("minus").addEventListener("click", () => {
-            if (qty <= 1) return;
-            qty--;
-            updateQtyUI();
-        });
-
-        // 장바구니 담기
         document.getElementById("add-to-cart").addEventListener("click", onAddToCart);
     }
 
     function openBottomSheet(box) {
-        if (box.classList.contains("sold-out")) return;
+        if (box.classList.contains("user-menu__card--soldout")) return;
 
         currItemId = Number(box.dataset.itemid);
         currPrice = Number(box.dataset.price);
@@ -322,13 +268,13 @@
 
         updateQtyUI();
 
-        document.getElementById("bottom-sheet").classList.remove("hidden");
-        document.getElementById("overlay").classList.remove("hidden");
+        document.getElementById("bottom-sheet").classList.remove("u-hidden");
+        document.getElementById("overlay").classList.remove("u-hidden");
     }
 
     function closeBottomSheet() {
-        document.getElementById("bottom-sheet").classList.add("hidden");
-        document.getElementById("overlay").classList.add("hidden");
+        document.getElementById("bottom-sheet").classList.add("u-hidden");
+        document.getElementById("overlay").classList.add("u-hidden");
     }
 
     function updateQtyUI() {
@@ -357,8 +303,6 @@
                 throw new Error(errMsg || "장바구니 담기 실패");
             }
 
-            // 서버가 summary를 반환하는 경우에만 즉시 반영(선택)
-            // 최종 동기화는 WS 이벤트가 담당
             const maybeJson = await res.text();
             if (maybeJson) {
                 const parsed = safeJson(maybeJson);
@@ -375,9 +319,6 @@
         }
     }
 
-    // ============================================
-    // Cart button
-    // ============================================
     function renderCartButton(summary) {
         const viewCart = document.getElementById("view-cart");
         const totalQuantity = Number(summary?.totalQuantity ?? 0);
@@ -385,9 +326,9 @@
 
         if (totalQuantity > 0) {
             viewCart.textContent = `총 ${formatComma(totalAmount)}원 장바구니 보기 (${totalQuantity})`;
-            viewCart.classList.remove("hidden");
+            viewCart.classList.remove("u-hidden");
         } else {
-            viewCart.classList.add("hidden");
+            viewCart.classList.add("u-hidden");
         }
     }
 
@@ -395,27 +336,16 @@
         try {
             const res = await fetch("/cart/summary");
             if (!res.ok) return;
-            const data = await res.json(); // { totalAmount, totalQuantity }
+            const data = await res.json();
             renderCartButton(data);
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     }
 
-    // ============================================
-    // Utils
-    // ============================================
-    function safeJson(str) {
-        try { return JSON.parse(str); } catch (e) { return null; }
-    }
-
-    function formatComma(n) {
-        return Number(n ?? 0).toLocaleString("ko-KR");
-    }
-
-    function formatWon(n) {
-        return `${formatComma(n)}원`;
-    }
+    function safeJson(str) { try { return JSON.parse(str); } catch { return null; } }
+    function formatComma(n) { return Number(n ?? 0).toLocaleString("ko-KR"); }
+    function formatWon(n) { return `${formatComma(n)}원`; }
 </script>
+
+<script th:src="@{/js/toast.js}"></script>
 </body>
 </html>
