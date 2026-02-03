@@ -24,15 +24,15 @@
 <main class="admin-container">
 
     <!-- 탭 네비게이션 -->
-    <nav class="admin-tabs">
+    <nav class="admin-hall-tabs">
         <a th:href="@{/admin/orders/hall}"
-           class="admin-tabs__tab"
-           th:classappend="${activeTab == 'confirm'} ? ' admin-tabs__tab--active' : ''">
+           class="admin-hall-tabs__tab"
+           th:classappend="${activeTab == 'confirm'} ? ' admin-hall-tabs__tab--active' : ''">
             입금 확인
         </a>
         <a th:href="@{/admin/orders/hall/serve}"
-           class="admin-tabs__tab"
-           th:classappend="${activeTab == 'serve'} ? ' admin-tabs__tab--active' : ''">
+           class="admin-hall-tabs__tab"
+           th:classappend="${activeTab == 'serve'} ? ' admin-hall-tabs__tab--active' : ''">
             서빙
         </a>
     </nav>

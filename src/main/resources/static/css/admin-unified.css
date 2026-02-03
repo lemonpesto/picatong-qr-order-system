@@ -84,7 +84,7 @@ body.admin ul {
     background: var(--a-bg);
     padding: 0 var(--a-pad-x);
     padding-top: env(safe-area-inset-top);
-    /*border-bottom: 1px solid var(--a-line);*/
+    border-bottom: 1px solid #fff;
 }
 
 .admin-topbar__toggle {
@@ -152,9 +152,9 @@ body.admin ul {
 
 /* =========================================================
  * Tabs (Block)
- * .admin-tabs
+ * .admin-hall-tabs
  * ========================================================= */
-.admin-tabs {
+.admin-hall-tabs {
     position: sticky;
     top: var(--a-topbar-h);
     z-index: 999;
@@ -166,7 +166,7 @@ body.admin ul {
     border-bottom: 1px solid var(--a-line);
 }
 
-.admin-tabs__tab {
+.admin-hall-tabs__tab {
     flex: none;
     padding: 12px 0;
     font-size: 18px;
@@ -175,18 +175,18 @@ body.admin ul {
     position: relative;
 }
 
-.admin-tabs__tab:link,
-.admin-tabs__tab:visited {
+.admin-hall-tabs__tab:link,
+.admin-hall-tabs__tab:visited {
     color: #737373;
 }
 
-.admin-tabs__tab--active:link,
-.admin-tabs__tab--active:visited {
+.admin-hall-tabs__tab--active:link,
+.admin-hall-tabs__tab--active:visited {
     color: #272727;
 }
 
 
-.admin-tabs__tab--active::after {
+.admin-hall-tabs__tab--active::after {
     content: "";
     position: absolute;
     left: 0;
@@ -197,42 +197,36 @@ body.admin ul {
 }
 
 /* =========================================================
- * Pill Tabs (Menu Category)
- * .admin-pilltabs
+ * 카테고리 목차
  * ========================================================= */
-.admin-pilltabs {
+.admin-tabs {
     position: sticky;
     top: var(--a-topbar-h);
-    z-index: 999;
+    z-index: 50;
 
     display: flex;
     gap: 10px;
     padding: 12px var(--a-pad-x);
-    margin: 0;
-
+    background: #fff;
     overflow-x: auto;
-    background: var(--a-bg);
-    border-bottom: 1px solid var(--a-line);
+    /*border-bottom: 1px solid var(--u-line);*/
 }
 
-.admin-pilltabs::-webkit-scrollbar {
-    display: none;
-}
+.admin-tabs::-webkit-scrollbar { display: none; }
 
-.admin-pilltabs__btn {
-    padding: 7px 15px;
+.admin-tabs__btn {
+    padding: 8px 16px;
     border: 0;
     border-radius: 999px;
     background: #f2f2f2;
     color: #737373;
-
-    font-weight: 700;
-    font-size: 16px;
+    font-weight: 900;
+    font-size: 17px;
     cursor: pointer;
     white-space: nowrap;
 }
 
-.admin-pilltabs__btn--active {
+.admin-tabs__btn--active {
     background: #222;
     color: #fff;
 }
