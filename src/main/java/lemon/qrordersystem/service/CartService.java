@@ -165,6 +165,7 @@ public class CartService {
     /**
      * 장바구니 요약 정보 조회
      */
+    @Transactional(readOnly = true)
     public CartSummaryDto getCartSummary(Long tableId) {
         Optional<Cart> cartOpt = cartRepository.findFirstByTable_IdAndStatusInOrderByIdDesc(
                 tableId, List.of(CartStatus.ORDERING, CartStatus.ACTIVE)
@@ -191,6 +192,7 @@ public class CartService {
     /**
      * 장바구니 아이템 목록 조회
      */
+    @Transactional(readOnly = true)
     public List<CartItem> getCartItems(Long tableId) {
         Cart cart = getOrCreateCart(tableId);
         assertEditable(cart);

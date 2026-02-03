@@ -16,14 +16,22 @@ public class Item {
     @Column(name = "item_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
+    @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false)
     private Integer price;
+
+    @Column(columnDefinition = "TEXT")
     private String description;
-    private Boolean isActive;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean isActive = true;
 
     public void update(String name, Integer price, Category category, Boolean isActive, String description) {
         this.name = name;

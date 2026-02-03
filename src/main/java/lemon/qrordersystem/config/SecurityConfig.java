@@ -19,7 +19,16 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers(
+                                "/ws/**",           // WebSocket
+                                "/cart/**",         // 장바구니 API
+                                "/orders/**",       // 주문 API (사용자)
+                                "/payment/**",       // 결제 API
+                                "/admin/orders/**",
+                                "/admin/kitchen/orders/**"
+                        )
+                )
 
                 .requestCache(cache -> cache.disable())
 
