@@ -67,8 +67,6 @@
                         </a>
                     </div>
 
-                    <p class="admin-menu-card__meta" th:text="${cat.name}">카테고리</p>
-
                     <p class="admin-menu-card__price"
                        th:text="${#numbers.formatInteger(item.price, 0, 'COMMA')} + '원'">
                         0원

@@ -1,4 +1,16 @@
 <div th:fragment="toast">
-    <div th:if="${successMessage}" class="toast toast--success success" th:text="${successMessage}"></div>
-    <div th:if="${errorMessage}" class="toast toast--error error" th:text="${errorMessage}"></div>
+    <div id="toast" class="toast"></div>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const successMsg = /*[[${successMessage}]]*/ null;
+        const errorMsg = /*[[${errorMessage}]]*/ null;
+
+        if (successMsg) {
+            setTimeout(() => showToast(successMsg), 100);
+        }
+        if (errorMsg) {
+            setTimeout(() => showToast(errorMsg), 100);
+        }
+        /*]]>*/
+    </script>
 </div>

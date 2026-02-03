@@ -349,8 +349,12 @@
         const prev = button.disabled;
         button.disabled = true;
         try {
-            await fetch(url, { method: 'POST' });
-            // WebSocket으로 실시간 동기화됨
+            const res = await fetch(url, { method: 'POST' });
+            const data = await res.json();
+
+            if (data.success && data.message) {
+                showToast(data.message);
+            }
         } catch (err) {
             console.error(err);
             alert('오류가 발생했습니다: ' + (err?.message || err));

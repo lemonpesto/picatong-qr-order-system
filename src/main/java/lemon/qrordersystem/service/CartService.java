@@ -16,6 +16,7 @@ import lemon.qrordersystem.repository.CartRepository;
 import lemon.qrordersystem.repository.ItemRepository;
 import lemon.qrordersystem.repository.TableRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -40,6 +42,13 @@ public class CartService {
         TableEntity table = tableRepository.findById(tableId)
                 .orElseThrow(() -> new BusinessException("테이블을 찾을 수 없습니다."));
 
+        // 1) 주문 중인 장바구니 우선 조회 (중복이 있으면 정리)
+        Optional<Cart> ordering = findAndHealOrderingCart(tableId);
+        if (ordering.isPresent()) {
+            return ordering.get();
+        }
+
+        // 2) ACTIVE 있으면 그대로 사용
         return cartRepository.findByTable_IdAndStatus(tableId, CartStatus.ACTIVE)
                 .orElseGet(() -> {
                     Cart cart = Cart.builder()
@@ -52,10 +61,34 @@ public class CartService {
 
     /**
      * 장바구니 상태를 ORDERING -> ACTIVE로 되돌림
+     * - ORDERING이 여러 개면(데이터 꼬임) 최신 1개만 살리고 나머지는 삭제/정리함
      */
     public void unlockCartToActive(Long tableId) {
-        cartRepository.findByTable_IdAndStatus(tableId, CartStatus.ORDERING)
-                .ifPresent(Cart::unlockToActive);
+        Optional<Cart> ordering = findAndHealOrderingCart(tableId);
+        ordering.ifPresent(Cart::unlockToActive);
+    }
+
+    private Optional<Cart> findAndHealOrderingCart(Long tableId) {
+        List<Cart> orderingCarts =
+                cartRepository.findAllByTable_IdAndStatusOrderByIdDesc(tableId, CartStatus.ORDERING);
+
+        if (orderingCarts.isEmpty()) return Optional.empty();
+
+        Cart keep = orderingCarts.get(0);
+
+        if (orderingCarts.size() > 1) {
+            log.warn("[DUP_CART] tableId={} ORDERING carts={} -> keep cartId={}",
+                    tableId, orderingCarts.size(), keep.getId());
+
+            for (int i = 1; i < orderingCarts.size(); i++) {
+                Cart dup = orderingCarts.get(i);
+                // cartItem 정리 후 cart 삭제
+                cartItemRepository.deleteByCartId(dup.getId());
+                cartRepository.delete(dup);
+            }
+        }
+
+        return Optional.of(keep);
     }
 
     /**

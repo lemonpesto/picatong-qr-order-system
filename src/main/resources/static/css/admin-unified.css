@@ -1,5 +1,5 @@
 @font-face {
-    font-family: "Pretendard";
+    font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     font-style: normal;
     font-weight: 400;
     font-display: swap;
@@ -95,7 +95,7 @@ body.admin ul {
 
 .admin-topbar__title {
     font-size: 18px;
-    font-weight: 800;
+    font-weight: 700;
 }
 
 /* =========================================================
@@ -220,7 +220,7 @@ body.admin ul {
     border-radius: 999px;
     background: #f2f2f2;
     color: #737373;
-    font-weight: 900;
+    font-weight: 700;
     font-size: 17px;
     cursor: pointer;
     white-space: nowrap;
@@ -279,7 +279,7 @@ body.admin ul {
 
 .admin-card__title {
     font-size: 18px;
-    font-weight: 900;
+    font-weight: 700;
 }
 
 .admin-card__meta {
@@ -308,7 +308,7 @@ body.admin ul {
 .admin-menu-card__title {
     margin: 0;
     font-size: 18px;
-    font-weight: 900;
+    font-weight: 600;
 }
 
 .admin-menu-card__edit {
@@ -327,12 +327,12 @@ body.admin ul {
 .admin-menu-card__price {
     margin: 6px 0;
     font-size: 16px;
-    font-weight: 900;
+    font-weight: 500;
 }
 
 .admin-menu-card__status {
     margin: 6px 0 0;
-    font-weight: 900;
+    font-weight: 500;
     font-size: 16px;
 }
 
@@ -355,7 +355,7 @@ body.admin ul {
     min-height: 55px;
 
     font-size: 16px;
-    font-weight: 800;
+    font-weight: 600;
 }
 
 .admin-menu-card--new i {
@@ -388,7 +388,7 @@ body.admin ul {
 
 .admin-order__table {
     font-size: 18px;
-    font-weight: 900;
+    font-weight: 600;
 }
 
 .admin-order__status {
@@ -397,7 +397,7 @@ body.admin ul {
     padding: 6px 10px;
     border-radius: 10px;
     font-size: 13px;
-    font-weight: 800;
+    font-weight: 600;
     background: var(--a-soft);
     color: var(--a-muted);
 }
@@ -432,14 +432,14 @@ body.admin ul {
 }
 
 .admin-order__itemname {
-    font-weight: 900;
+    font-weight: 500;
     min-width: 0;
 }
 
 .admin-order__total {
     text-align: right;
     font-size: 22px;
-    font-weight: 900;
+    font-weight: 600;
     margin: 10px 0 14px;
     color: var(--a-muted);
 }
@@ -494,6 +494,8 @@ body.admin ul {
     transform: scale(1.25);
     transform-origin: left center;
     margin-right: 4px;
+}
+.admin-checklist__checkbox:enabled {
     accent-color: #222;
 }
 
@@ -508,16 +510,21 @@ body.admin ul {
 
 .admin-checklist__name {
     font-size: 16px;
-    font-weight: 900;
+    font-weight: 500;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.admin-checklist__name:enabled {
     color: var(--a-text);
 }
 
 .admin-checklist__qty {
     font-size: 16px;
-    font-weight: 900;
+    font-weight: 500;
+}
+.admin-checklist__qty:enabled {
     color: var(--a-text);
 }
 
@@ -528,7 +535,7 @@ body.admin ul {
 }
 
 /* disabled -> 더 흐리게(서빙) */
-.admin-checklist__checkbox:disabled + .admin-checklist__text {
+#serve-list .admin-checklist__checkbox:disabled + .admin-checklist__text {
     color: #9ca3af;
     text-decoration: none;
 }
@@ -539,14 +546,14 @@ body.admin ul {
  * .btn
  * ========================================================= */
 .btn {
-    height: 52px;
+    height: 50px;
     width: 100%;
     border: 0;
     border-radius: 12px;
     cursor: pointer;
 
-    font-size: 16px;
-    font-weight: 900;
+    font-size: 18px;
+    font-weight: 700;
 
     display: inline-flex;
     align-items: center;
@@ -595,7 +602,7 @@ body.admin ul {
     border-radius: 0;
     text-decoration: underline;
     font-size: 14px;
-    font-weight: 900;
+    font-weight: 600;
 }
 
 /* =========================================================
@@ -618,7 +625,7 @@ body.admin ul {
 .admin-form-page__title {
     margin: 0;
     font-size: 18px;
-    font-weight: 900;
+    font-weight: 700;
 }
 
 .admin-form {
@@ -629,7 +636,7 @@ body.admin ul {
 
 .admin-form__label {
     margin-top: 16px;
-    font-weight: 900;
+    font-weight: 700;
 }
 
 .admin-form__label .essential-input {

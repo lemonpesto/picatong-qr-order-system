@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface CartRepository extends JpaRepository<Cart, Long> {
     Optional<Cart> findByTable_IdAndStatus(Long tableId, CartStatus status);
     Optional<Cart> findFirstByTable_IdAndStatusInOrderByIdDesc(Long tableId, List<CartStatus> statuses);
+    List<Cart> findAllByTable_IdAndStatusOrderByIdDesc(Long tableId, CartStatus status);
 }

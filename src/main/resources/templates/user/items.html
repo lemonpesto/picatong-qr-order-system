@@ -12,6 +12,7 @@
 <body class="user">
 <!-- nav -->
 <div th:replace="~{fragments/nav :: nav(null, null, ${tableNum}, true)}"></div>
+<div th:replace="~{fragments/toast :: toast}"></div>
 
 <!-- 카테고리 목차 -->
 <div class="user-tabs" th:if="${!#lists.isEmpty(categories)}">
@@ -113,7 +114,6 @@
     </div>
 </div>
 
-<div id="toast" class="toast"></div>
 <div id="overlay" class="user-overlay u-hidden"></div>
 <script th:src="@{/js/toast.js}"></script>
 

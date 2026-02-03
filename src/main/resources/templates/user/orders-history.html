@@ -20,7 +20,7 @@
             <div class="user-orders__card">
                 <div class="user-orders__head">
                     <span class="user-orders__label" th:text="${st.index == 0} ? '최근 주문' : '이전 주문'">최근 주문</span>
-                    <span class="user-orders__time" th:text="${#temporals.format(order.createdAt, 'HH:mm')}">00:00</span>
+                    <span class="user-orders__time" th:text="${#temporals.format(order.createdAt, 'MM/dd HH:mm')}">00/00 00:00</span>
                 </div>
 
                 <div class="user-orders__item" th:each="oi : ${order.orderItems}">

@@ -70,7 +70,7 @@ public class PaymentController {
     @PostMapping
     public String requestPaymentConfirm(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            Long orderId) {
+            @RequestParam Long orderId) {
 
         Long tableId = userDetails.getId();
 
