@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const targetSection = document.getElementById(targetId);
       if (!targetSection) return;
 
-      const yOffset = -categoryBar.offsetHeight - 50;
+      const yOffset = -categoryBar.offsetHeight;
       const y = targetSection.getBoundingClientRect().top + window.pageYOffset + yOffset;
 
       autoScrollInProgress = true;

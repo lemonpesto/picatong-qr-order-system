@@ -18,8 +18,6 @@ import lemon.qrordersystem.repository.TableRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,12 +27,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Transactional
 public class CartService {
-    
+
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final TableRepository tableRepository;
     private final ItemRepository itemRepository;
-    private final WebSocketService ws;
 
     /**
      * 사용 가능한 장바구니 조회, 없으면 생성
@@ -95,9 +92,6 @@ public class CartService {
 
             cart.getCartItems().add(cartItem);
         }
-
-        // 같은 테이블의 모든 사용자에게 장바구니 변경 알림
-        notifyCartUpdated(tableId);
     }
 
     /**
@@ -117,8 +111,6 @@ public class CartService {
         } else {
             ci.changeQuantity(quantity);
         }
-
-        notifyCartUpdated(tableId);
     }
 
     /**
@@ -135,8 +127,6 @@ public class CartService {
         if (!removed) {
             throw new BusinessException("장바구니에 해당 아이템이 없습니다.");
         }
-
-        notifyCartUpdated(tableId);
     }
 
     /**
@@ -186,19 +176,12 @@ public class CartService {
             Cart cart = cartOpt.get();
             cartItemRepository.deleteByCartId(cart.getId());
         }
-
-        notifyCartUpdated(tableId);
     }
 
     private void assertEditable(Cart cart) {
         if (!cart.isEditable()) {
             throw new BusinessException("현재 주문 중입니다.");
         }
-    }
-
-    private void notifyCartUpdated(Long tableId) {
-        CartSyncDto payload = buildCartSyncDto(tableId);
-        ws.tableCartUpdated(tableId, payload);
     }
 
     @Transactional(readOnly = true)

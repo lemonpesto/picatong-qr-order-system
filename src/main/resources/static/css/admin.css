@@ -243,6 +243,7 @@ a {
 .hall-tabs {
   display: flex;
   gap: 24px;
+  margin-bottom: 24px;
   background: #fff;
   position: sticky;
   top: 0;
@@ -620,12 +621,7 @@ a {
 
 /* ========== 주문 관리 페이지 스타일 ========== */
 
-/* 주문 컨테이너 */
-.orders-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
+
 
 .orders-container h1 {
   font-size: 24px;
@@ -639,7 +635,6 @@ a {
   border: 2px solid #ddd;
   border-radius: 8px;
   padding: 20px;
-  margin-bottom: 15px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
@@ -716,13 +711,15 @@ a {
   margin: 15px 0;
 }
 
-.orders-container .order-item {
+.orders-container .order-item{
   display: flex;
   justify-content: space-between;
   padding: 10px 0;
   /*border-bottom: 1px solid #f0f0f0;*/
   font-size: 16px;
 }
+
+
 
 .orders-container .item-name {
   font-weight: 500;
@@ -761,33 +758,13 @@ a {
 /* 버튼 공통 스타일 */
 .orders-container .btn {
   flex: 1;
-  padding: 12px;
+  padding: 10px;
   border: none;
   border-radius: 5px;
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s;
-}
-
-/* 입금 확인 버튼 */
-.orders-container .btn-confirm {
-  background: #28a745;
-  color: white;
-}
-
-.orders-container .btn-confirm:hover {
-  background: #218838;
-}
-
-/* 주문 취소 버튼 */
-.orders-container .btn-cancel {
-  background: #dc3545;
-  color: white;
-}
-
-.orders-container .btn-cancel:hover {
-  background: #c82333;
 }
 
 /* 조리/서빙 완료 버튼 */
@@ -824,8 +801,484 @@ a {
   font-size: 16px;
 }
 
-/* 타임스탬프 */
-.orders-container .timestamp {
-  color: #666;
+/* ===== 공통 ===== */
+
+/* 시간: 덜 튀게 */
+.orders-container .timestamp{
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* 탭이 topbar 아래에 붙도록 */
+.hall-tabs{
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+  background: #fff;
+  position: sticky;
+  z-index: 100;
+  top: 50px; /* topbar 높이 */
+  border-bottom: 1px solid #eee;
+}
+
+.orders-container{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px 24px;
+}
+
+/* 버튼 영역: 터치하기 쉽게 높이/간격 개선 */
+.orders-container .order-actions{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 0;
+}
+
+/* 버튼 공통 */
+.orders-container .btn{
+  height: 48px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 800;
+  width: 100%
+}
+
+
+/* 비활성: 회색 고정 */
+.orders-container .btn:disabled{
+  background: #e5e7eb !important;
+  color: #9ca3af !important;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+/* =========================
+   Hall(입금확인) 가독성 개선
+   ========================= */
+.orders-container #paid-list .order-actions{
+  display: grid;
+  grid-template-columns: 1fr 3fr; /* ✅ 취소 1/4, 확인 3/4 */
+  gap: 12px;
+}
+
+/* 버튼 기본 높이/라운드는 기존 유지하되 확실히 꽉 차게 */
+.orders-container #paid-list .order-actions .btn{
+  width: 100%;
+  height: 52px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+
+/* 카드 베이스: 여백/선명도/터치영역 개선 */
+.orders-container #paid-list .order-card{
+  border: 2px solid #e5e7eb;           /* 기본(무채색) */
+  border-radius: 14px;
+  padding: 18px 18px 16px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+/* 입금 중(비활성): 무채색 테두리 */
+.orders-container #paid-list .order-card.pending{
+  border-color: #d1d5db;               /* 회색 */
+}
+
+/* 입금 확인 대기(활성): 컬러 테두리 + 살짝 강조 */
+.orders-container #paid-list .order-card.waiting{
+  border-color: #22c55e;               /* 초록 */
+  box-shadow: 0 10px 24px rgba(34,197,94,0.12);
+}
+
+/* 헤더 정리 */
+.orders-container #paid-list .order-header{
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.orders-container #paid-list .order-header .badges{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 테이블 배지: 너무 크면 시선 분산 → 조금 정리 */
+.orders-container #paid-list .table-badge{
+  font-size: 16px;
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+
+/* 상태 배지: pending은 무채색, waiting은 초록 계열 */
+.orders-container #paid-list .status-badge{
+  padding: 5px 10px;
+  border-radius: 5px;
   font-size: 14px;
+  font-weight: 500;
+  margin-left: 10px;
+
+  /*font-size: 13px;*/
+  /*font-weight: 700;*/
+  /*padding: 6px 10px;*/
+  /*border-radius: 10px;*/
+  /*margin-left: 0;*/
+}
+
+.orders-container #paid-list .status-badge.status-pending,
+.orders-container #serve-list .status-badge.status-cooking {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.orders-container #paid-list .status-badge.status-waiting{
+  background: #dcfce7;
+  color: #166534;
+}
+
+.orders-container #serve-list .status-badge.status-serving {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+/* 아이템 라인: 좌측 이름 / 우측 가격 정보 정렬 */
+.orders-container #paid-list .order-items{
+  margin: 14px 0 10px;
+}
+
+.orders-container #paid-list .order-item{
+  padding: 10px 0;
+  font-size: 16px;
+  border-bottom: 1px dashed #f1f5f9;
+}
+
+.orders-container #paid-list .order-item:last-child{
+  border-bottom: none;
+}
+
+.orders-container .item-name{
+  font-weight: 700;
+}
+
+/* 총액: waiting일 때만 컬러 강조 */
+.orders-container #paid-list .order-total{
+  font-size: 22px;
+  font-weight: 800;
+  text-align: right;
+  margin: 10px 0 14px;
+  color: #6b7280; /* 기본(입금 중) */
+}
+
+.orders-container #paid-list .order-card.waiting .order-total{
+  color: #16a34a; /* 초록 */
+}
+
+/* 활성(입금 확인 대기)에서만 컬러 */
+.orders-container #paid-list .btn-confirm{
+  background: #16a34a;
+  color: #fff;
+}
+.orders-container #paid-list .btn-confirm:hover{
+  background: #15803d;
+}
+
+.orders-container #paid-list .btn-cancel{
+  background: #f3f4f6;   /* 연회색 */
+  color: #6b7280;        /* 회색 텍스트 */
+}
+.orders-container #paid-list .btn-cancel:hover{
+  background: #e5e7eb;
+}
+
+/* =========================
+   Hall(서빙) 가독성 개선
+   - ready(서빙완료 버튼 활성)일 때만 컬러 테두리
+   ========================= */
+
+.orders-container #serve-list .order-card{
+  border: 2px solid #e5e7eb;           /* 기본(무채색) */
+  border-radius: 14px;
+  padding: 18px 18px 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+/* 서빙 완료 버튼이 활성화된 시점 */
+.orders-container #serve-list .order-card.ready{
+  border-color: #0ea5e9;               /* 파랑/청록 계열 */
+  box-shadow: 0 10px 24px rgba(14,165,233,0.14);
+}
+
+/* 헤더 정리 */
+.orders-container #serve-list .order-header{
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.orders-container .table-num{
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.orders-container .time{
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* 체크리스트 가독성 */
+.orders-container #serve-list .order-items{
+  margin: 14px 0 12px;
+}
+
+.orders-container #serve-list .order-items li{
+  margin: 10px 0;
+}
+
+.orders-container #serve-list .order-items label{
+  /*width: 100%;*/
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f9fafb;
+}
+
+/* disabled 메뉴는 더 흐리게 */
+.orders-container #serve-list .serve-checkbox:disabled + .item-text{
+  color: #9ca3af;
+}
+
+/* 체크박스 크기/정렬 */
+.orders-container #serve-list .serve-checkbox{
+  transform: scale(1.25);
+  transform-origin: left center;
+  margin-right: 4px;
+}
+
+/* 버튼 footer */
+.orders-container #serve-list .serve-order-footer{
+  margin-top: 10px;
+}
+
+.orders-container .btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+/* 서빙 완료 버튼: 비활성은 회색, 활성은 카드 강조색 계열 */
+.orders-container #serve-list .btn-serve-complete{
+  width: 100%;
+  height: 50px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.orders-container #serve-list .btn-serve-complete:disabled{
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+/* 활성 */
+.orders-container #serve-list .btn-serve-complete:enabled{
+  background: #0ea5e9;
+  color: #fff;
+}
+
+.orders-container #serve-list .btn-serve-complete:enabled:active{
+  transform: scale(0.99);
+}
+
+/* enabled인 체크박스를 가진 label만 배경색 변경 */
+.orders-container #serve-list .order-items label:has(input.serve-checkbox:not(:disabled)) {
+  background: #eff6ff;
+}
+
+/* disabled인 체크박스를 가진 label */
+.orders-container #serve-list .order-items label:has(input.serve-checkbox:disabled) {
+  background: #f9fafb;
+}
+
+
+
+/* =========================
+   Kitchen(주방) 가독성 개선
+   - 완료 버튼은 항상 활성(예외)
+   ========================= */
+
+.kitchen-page {
+  padding: 16px 24px;
+}
+
+.kitchen-page .order-list {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+/* 카드: 여백/선명도/터치 영역 개선 */
+.kitchen-page .order-card {
+  border: 2px solid #e5e7eb;            /* 기본 무채색 */
+  border-radius: 14px;
+  padding: 18px 18px 14px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+/* 헤더 정리 */
+.kitchen-page .order-card .order-header {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.kitchen-page .order-card .table-num {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.kitchen-page .order-card .time {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* 체크리스트: 항목별 카드처럼 보이게 */
+.kitchen-page .order-card .order-items {
+  margin: 14px 0 12px;
+}
+
+.kitchen-page .order-card .order-items li {
+  margin: 10px 0;
+}
+
+/* label 자체를 터치영역으로 크게 */
+.kitchen-page .order-card .order-items label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px;
+  border-radius: 12px;
+  background: #f9fafb;
+}
+
+/* 체크박스 */
+.kitchen-page .order-card .cook-checkbox {
+  transform: scale(1.25);
+  transform-origin: left center;
+  margin-right: 4px;
+  accent-color: #222; /* 주방은 중립 톤 */
+}
+
+/* 체크되면 흐리게 + 취소선 */
+.kitchen-page .order-card .cook-checkbox:checked + .item-text {
+  color: #9ca3af;
+  text-decoration: line-through;
+}
+
+/* 처리 중(disabled)일 때만 더 흐리게 */
+.kitchen-page .order-card .cook-checkbox:disabled + .item-text {
+  color: #cbd5e1;
+}
+
+/* 푸터 버튼: 항상 활성, 크기/가독성 개선 */
+.kitchen-page .order-card .kitchen-order-footer,
+.orders-container #serve-list .serve-order-footer{
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.kitchen-page .order-card .complete-order-btn {
+  width: 100%;
+  height: 50px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.1s;
+  background: #111827;   /* 진한 중립 */
+  color: #fff;
+}
+
+.kitchen-page .order-card .complete-order-btn:active {
+  transform: scale(0.99);
+}
+
+/* (선택) 카드에 호버가 있는 환경에서만 살짝 */
+@media (hover: hover) {
+  .kitchen-page .order-card:hover {
+    box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+  }
+}
+
+/* =========================
+   Serve(서빙) 버튼을 주방처럼 "가로 꽉" 만들기
+   ========================= */
+
+/* footer가 가운데 정렬로 폭을 줄이지 않게 */
+.orders-container #serve-list .serve-order-footer {
+  display: block;          /* 기존 flex면 덮어씀 */
+  width: 100%;
+  margin-top: 12px;
+}
+
+/* 버튼을 "블록 + 100%"로 고정 (카드 하단을 채우는 느낌) */
+.orders-container #serve-list .btn-serve-complete {
+  display: block;
+  width: 100%;
+  height: 50px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 800;
+  border: none;
+}
+
+/* (선택) 주방처럼 눌림 효과 */
+.orders-container #serve-list .btn-serve-complete:enabled:active {
+  transform: scale(0.99);
+}
+
+/* =========================================
+   Serve(서빙) 탭: 메뉴명(왼쪽) / 수량(오른쪽) 한 줄 정렬
+   ========================================= */
+
+/* label을 한 줄 레이아웃으로 */
+.orders-container #serve-list .order-items label.serve-item,
+.kitchen-page label.kitchen-item{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px;
+  border-radius: 12px;
+  background: #f9fafb;
+}
+
+.orders-container #serve-list .order-items label.serve-item .item-text,
+.kitchen-page label.kitchen-item .item-text{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;              /* ✅ 남은 가로폭을 전부 차지 */
+  min-width: 0;         /* ✅ 긴 메뉴명일 때 줄바꿈/말줄임 안정 */
+  gap: 12px;
+}
+
+/* 메뉴명은 길면 말줄임 */
+.orders-container #serve-list .order-items label.serve-item .item-name{
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

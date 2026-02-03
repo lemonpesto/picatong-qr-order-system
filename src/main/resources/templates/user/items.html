@@ -233,7 +233,7 @@
                 const evt = safeJson(frame.body);
                 if (!evt || evt.type !== "ITEM_UPDATED") return;
 
-                const it = evt.data; // { itemId, name, price, isActive }
+                const it = evt.data; // { itemId, name, price, isActive, description }
                 applyItemUpdateToItemsPage(it);
                 showToast("메뉴 정보가 업데이트되었습니다.");
             });
@@ -258,6 +258,8 @@
         // 가격
         const priceSpan = box.querySelector(".price span");
         if (priceSpan) priceSpan.textContent = Number(it.price).toLocaleString("ko-KR");
+
+        // description도 바꿔야..
 
         // dataset도 갱신(바텀시트에서 사용)
         box.dataset.name = it.name;

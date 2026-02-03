@@ -560,7 +560,6 @@ a {
 
 .bottom-button {
   width: 100%;
-  max-width: 480px;
   padding: 12px;
   font-size: 16px;
   font-weight: 700;
@@ -599,6 +598,5 @@ a {
   margin: 0;
 }
 
-.hidden {
-  display: none;
-}
+.hidden { display: none !important; }
+
