@@ -73,7 +73,7 @@ public class Order {
 
     /** 주방: 조리 완료 */
     public void completeCooking() {
-        if (this.status != OrderStatus.COMPLETED) return;
+        if (this.status == OrderStatus.COMPLETED) return;
         if (this.status != OrderStatus.COOKING) {
             throw new IllegalStateException("조리 완료 가능한 상태가 아닙니다.");
         }

@@ -5,65 +5,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title th:text="${pageTitle}">관리자 페이지</title>
 
-    <link rel="stylesheet" th:href="@{/css/admin.css}"/>
-
+    <link rel="stylesheet" th:href="@{/css/admin-unified.css}" />
     <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
 </head>
-<body>
 
+<body class="admin">
 <!-- 공통 사이드바 -->
 <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
 
-<div class="topbar">
-    <i class="fas fa-bars" id="nav-bars"></i>
-    <span class="page-title" th:text="${pageTitle}">관리자 페이지</span>
-</div>
+<header class="admin-topbar">
+    <i class="fas fa-bars admin-topbar__toggle" id="nav-bars"></i>
+    <span class="admin-topbar__title" th:text="${pageTitle}">관리자 페이지</span>
+</header>
 
 <div th:replace="~{fragments/toast :: toast}"></div>
 <!-- 공통 사이드바 & 상단바 끝 -->
 
-<div class="orders-container">
+<main class="admin-container">
 
     <!-- 탭 네비게이션 -->
-    <div class="hall-tabs">
+    <nav class="admin-tabs">
         <a th:href="@{/admin/orders/hall}"
-           class="hall-tab"
-           th:classappend="${activeTab == 'confirm'} ? 'active' : ''">
+           class="admin-tabs__tab"
+           th:classappend="${activeTab == 'confirm'} ? ' admin-tabs__tab--active' : ''">
             입금 확인
         </a>
         <a th:href="@{/admin/orders/hall/serve}"
-           class="hall-tab"
-           th:classappend="${activeTab == 'serve'} ? 'active' : ''">
+           class="admin-tabs__tab"
+           th:classappend="${activeTab == 'serve'} ? ' admin-tabs__tab--active' : ''">
             서빙
         </a>
-    </div>
+    </nav>
 
     <!-- 탭 1: 입금 확인 -->
-    <div id="paid-list" class="order-list" th:if="${activeTab == 'confirm'}">
+    <section id="paid-list" class="admin-order__list" th:if="${activeTab == 'confirm'}">
 
-        <div th:if="${confirmOrders.isEmpty()}" class="empty-state">
+        <div th:if="${confirmOrders.isEmpty()}" class="admin-empty">
             <p>확인할 주문이 없습니다.</p>
         </div>
 
-        <div th:each="order : ${confirmOrders}" class="order-card"
-             th:classappend="${order.status.name() == 'PAYMENT_PENDING'} ? 'pending' : 'waiting'"
-             th:attr="data-order-id=${order.id}">
+        <article th:each="order : ${confirmOrders}"
+                 class="admin-card admin-card--soft js-order-card"
+                 th:classappend="${order.status.name() == 'PAYMENT_PENDING'} ? '' : ' admin-card--accent-green'"
+                 th:attr="data-order-id=${order.id}">
 
-            <div class="order-header">
-                <div>
-                    <span class="table-num" th:text="'테이블 ' + ${order.table.tableNum}">테이블 1</span>
-                    <span class="status-badge"
-                          th:classappend="${order.status.name() == 'PAYMENT_PENDING'} ? 'status-pending' : 'status-waiting'"
-                          th:text="${order.status.name() == 'PAYMENT_PENDING'} ? '입금 중' : '입금 확인 대기'">
-                        입금 중
-                    </span>
+            <div class="admin-card__header">
+                <div class="admin-order__left">
+                    <span class="admin-order__table" th:text="'테이블 ' + ${order.table.tableNum}">테이블 1</span>
+                    <div class="admin-card__meta" th:text="${#temporals.format(order.createdAt, 'HH:mm:ss')}">
+                        12:34:56
+                    </div>
                 </div>
-                <div class="timestamp" th:text="${#temporals.format(order.createdAt, 'HH:mm:ss')}">12:34:56</div>
+                <span class="admin-order__status"
+                      th:classappend="${order.status.name() == 'PAYMENT_PENDING'} ? '' : ' admin-order__status--waiting'"
+                      th:text="${order.status.name() == 'PAYMENT_PENDING'} ? '입금 중' : '입금 완료'">
+                        입금 중
+                </span>
             </div>
 
-            <div class="order-items">
-                <div th:each="oi : ${order.orderItems}" class="order-item">
-                    <span class="item-name" th:text="${oi.item.name}">아이템명</span>
+            <div class="admin-order__items">
+                <div th:each="oi : ${order.orderItems}" class="admin-order__itemline">
+                    <span class="admin-order__itemname" th:text="${oi.item.name}">아이템명</span>
                     <span>
                         <span th:text="${oi.quantity}">1</span>개 ×
                         <span th:text="${#numbers.formatInteger(oi.orderPrice, 0, 'COMMA')}">10,000</span>원
@@ -71,68 +73,70 @@
                 </div>
             </div>
 
-            <div class="order-total">
-                총 <span th:text="${#numbers.formatInteger(order.totalAmount, 0, 'COMMA')}">20,000</span>원
+            <div class="admin-order__total">
+                총&nbsp;<span th:text="${#numbers.formatInteger(order.totalAmount, 0, 'COMMA')}">20,000</span>원
             </div>
 
-            <!-- 입금 확인 / 주문 취소: 각각 별도 폼 (PRG) -->
-            <div class="order-actions">
-                <form th:action="@{/admin/orders/{orderId}/cancel(orderId=${order.id})}" method="post"
-                      style="display: inline;">
-                    <button type="submit" class="btn btn-cancel"
+            <!-- 입금 확인 / 주문 취소 -->
+            <div class="admin-order__actions admin-order__actions--confirm">
+                <form th:action="@{/admin/orders/{orderId}/cancel(orderId=${order.id})}" method="post" style="display:inline;">
+                    <button type="submit"
+                            class="btn btn--cancel js-btn-cancel"
                             th:disabled="${order.status.name() == 'PAYMENT_PENDING'}"
                             onclick="return confirm('주문을 취소하시겠습니까?')">
                         주문 취소
                     </button>
                 </form>
-                <form th:action="@{/admin/orders/{orderId}/confirm(orderId=${order.id})}" method="post"
-                      style="display: inline;">
-                    <button type="submit" class="btn btn-confirm"
+
+                <form th:action="@{/admin/orders/{orderId}/confirm(orderId=${order.id})}" method="post" style="display:inline;">
+                    <button type="submit"
+                            class="btn btn--confirm js-btn-confirm"
                             th:disabled="${order.status.name() == 'PAYMENT_PENDING'}"
                             onclick="return confirm('입금을 확인하시겠습니까?')">
                         입금 확인
                     </button>
                 </form>
-
             </div>
-        </div>
-    </div>
+        </article>
+    </section>
 
     <!-- 탭 2: 서빙 -->
-    <div id="serve-list" class="order-list" th:if="${activeTab == 'serve'}">
+    <section id="serve-list" class="admin-order__list" th:if="${activeTab == 'serve'}">
 
-        <div th:if="${serveOrders.isEmpty()}" class="empty-state">
+        <div th:if="${serveOrders.isEmpty()}" class="admin-empty">
             <p>서빙할 주문이 없습니다.</p>
         </div>
 
-        <div th:each="order : ${serveOrders}" class="order-card" th:attr="data-order-id=${order.id}">
+        <article th:each="order : ${serveOrders}"
+                 class="admin-card admin-card--soft js-serve-card"
+                 th:attr="data-order-id=${order.id}">
 
-            <div class="order-header">
-                <span class="table-num" th:text="'테이블 ' + ${order.table.tableNum}">테이블 1</span>
-                <span class="timestamp" th:text="${#temporals.format(order.createdAt, 'HH:mm:ss')}">12:34:56</span>
+            <div class="admin-card__header admin-order__header">
+                <span class="admin-order__table" th:text="'테이블 ' + ${order.table.tableNum}">테이블 1</span>
+                <span class="admin-card__meta" th:text="${#temporals.format(order.createdAt, 'HH:mm:ss')}">12:34:56</span>
             </div>
 
-            <ul class="order-items">
-                <li th:each="oi : ${order.orderItems}">
-                    <label class="serve-item">
+            <ul class="admin-checklist">
+                <li class="admin-checklist__row" th:each="oi : ${order.orderItems}">
+                    <label class="admin-checklist__label">
                         <input type="checkbox"
-                               class="serve-checkbox"
+                               class="admin-checklist__checkbox js-serve-checkbox"
                                th:checked="false"
                                th:disabled="${oi.item.category.isManufactured ? !oi.cooked : false}"
                                th:attr="data-order-id=${order.id}, data-order-item-id=${oi.id}"
                                onchange="onServeCheckChanged(this)"/>
-                        <span class="item-text">
-                            <span class="item-name" th:text="${oi.item.name}">아이템명</span>
-                            <span class="item-qty" th:text="${oi.quantity} + '개'">1개</span>
+                        <span class="admin-checklist__text">
+                            <span class="admin-checklist__name" th:text="${oi.item.name}">아이템명</span>
+                            <span class="admin-checklist__qty" th:text="${oi.quantity} + '개'">1개</span>
                         </span>
                     </label>
                 </li>
             </ul>
 
-            <!-- 서빙 완료: 모든 체크박스가 다 활성화 될 때 버튼 활성화 -->
-            <div class="serve-order-footer">
+            <div style="margin-top:12px;">
                 <form th:action="@{/admin/orders/{orderId}/complete(orderId=${order.id})}" method="post">
-                    <button type="submit" class="btn-serve-complete"
+                    <button type="submit"
+                            class="btn btn--primary js-btn-serve-complete"
                             th:attr="data-order-id=${order.id}"
                             disabled
                             onclick="return confirm('서빙이 완료되었습니까?')">
@@ -140,10 +144,9 @@
                     </button>
                 </form>
             </div>
-        </div>
-    </div>
-</div>
-
+        </article>
+    </section>
+</main>
 
 <!-- 공통 스크립트 -->
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
@@ -172,7 +175,6 @@
     let sock = null;
     let stompClient = null;
 
-    // progress 중복 구독 방지 (orderItemId 기준)
     const subscribedProgress = new Set();
 
     /* =========================================================
@@ -196,13 +198,10 @@
         sock = new SockJS(WS.url);
         stompClient = Stomp.over(sock);
         stompClient.debug = null;
-
-        // stompjs 2.3.3 환경에서 동작 가능
         stompClient.reconnect_delay = WS.retryMs;
 
         stompClient.connect({}, onWsConnected, onWsError);
 
-        // SockJS 레벨 close도 잡아서 강제 재연결
         sock.onclose = () => {
             console.warn('[WS] closed. retry in 3s');
             setTimeout(connectWs, WS.retryMs);
@@ -211,15 +210,10 @@
 
     const onWsConnected = () => {
         console.log('[WS] connected');
-
         subscribeReloadTopics();
 
         if (isServeTab()) {
-            try {
-                subscribeServeProgressTopics();
-            } catch (e) {
-                console.error('[WS] subscribeServeProgressTopics failed', e);
-            }
+            subscribeServeProgressTopics();
         }
     };
 
@@ -237,12 +231,9 @@
         stompClient.subscribe(WS.topics.hallServeReload, onReload);
     };
 
-    /**
-     * 주방에서 특정 주문아이템의 체크박스 클릭 시
-     */
     const subscribeServeProgressTopics = () => {
         document
-            .querySelectorAll('#serve-list input.serve-checkbox[data-order-item-id]')
+            .querySelectorAll('#serve-list input.js-serve-checkbox[data-order-item-id]')
             .forEach((cb) => {
                 const orderItemId = cb.getAttribute('data-order-item-id');
                 if (!orderItemId) return;
@@ -254,7 +245,6 @@
                     const evt = safeJson(message.body);
                     if (!evt) return;
 
-                    // evt: { orderId, orderItemId, checked }
                     updateOrderItemCooked(evt.orderId, evt.orderItemId, evt.checked);
                 });
             });
@@ -267,12 +257,13 @@
         if (!isConfirmTab()) return;
 
         document
-            .querySelectorAll('#paid-list .order-card[data-order-id]')
+            .querySelectorAll('#paid-list .js-order-card[data-order-id]')
             .forEach((card) => {
-                const isWaiting = card.classList.contains('waiting');
+                // admin-card--accent-green이면 waiting 상태로 보자
+                const isWaiting = card.classList.contains('admin-card--accent-green');
 
-                const confirmBtn = card.querySelector('button.btn.btn-confirm');
-                const cancelBtn  = card.querySelector('button.btn.btn-cancel');
+                const confirmBtn = card.querySelector('button.js-btn-confirm');
+                const cancelBtn  = card.querySelector('button.js-btn-cancel');
 
                 if (confirmBtn) confirmBtn.disabled = !isWaiting;
                 if (cancelBtn)  cancelBtn.disabled  = !isWaiting;
@@ -284,28 +275,27 @@
      * ========================================================= */
     const updateServeCompleteButtons = () => {
         if (!isServeTab()) return;
-        document.querySelectorAll('#serve-list .order-card').forEach(updateCompleteButton);
+        document.querySelectorAll('#serve-list .js-serve-card').forEach(updateCompleteButton);
     };
 
     const onServeCheckChanged = (checkbox) => {
-        const card = checkbox?.closest('.order-card');
+        const card = checkbox?.closest('.js-serve-card');
         if (card) updateCompleteButton(card);
     };
 
     const updateOrderItemCooked = (orderId, orderItemId, cooked) => {
-        const orderCard = document.querySelector(`.order-card[data-order-id="${orderId}"]`);
+        const orderCard = document.querySelector(`.js-serve-card[data-order-id="${orderId}"]`);
         if (!orderCard) return;
 
         const checkbox = orderCard.querySelector(
-            `input.serve-checkbox[data-order-id="${orderId}"][data-order-item-id="${orderItemId}"]`
+            `input.js-serve-checkbox[data-order-id="${orderId}"][data-order-item-id="${orderItemId}"]`
         );
         if (!checkbox) return;
 
-        // 조리 완료(cooked=true)면 활성화, 아니면 비활성화 + 체크 해제
         checkbox.disabled = !cooked;
         if (!cooked) checkbox.checked = false;
 
-        // 간단 하이라이트(선택)
+        // cooked=false일 때만 하이라이트
         const label = checkbox.closest('label');
         if (label && !cooked) {
             label.style.transition = 'background 0.3s';
@@ -317,26 +307,27 @@
     };
 
     const updateCompleteButton = (orderCard) => {
-        const btn = orderCard?.querySelector('.btn-serve-complete');
+        const btn = orderCard?.querySelector('.js-btn-serve-complete');
         if (!btn) return;
 
-        const checkboxes = orderCard.querySelectorAll('.serve-checkbox');
+        const checkboxes = orderCard.querySelectorAll('.js-serve-checkbox');
         if (checkboxes.length === 0) {
             btn.disabled = true;
-            orderCard.classList.remove('ready');
+            orderCard.classList.remove('admin-card--accent-blue');
             return;
         }
 
         const allEnabled = Array.from(checkboxes).every((cb) => !cb.disabled);
         btn.disabled = !allEnabled;
-        orderCard.classList.toggle('ready', allEnabled);
+
+        // ready 강조(파란 테두리)
+        orderCard.classList.toggle('admin-card--accent-blue', allEnabled);
     };
 
     /* =========================================================
      *  Entry / Bindings
      * ========================================================= */
     document.addEventListener('DOMContentLoaded', () => {
-        // 초기 렌더 상태 반영 (중복 호출 줄이기)
         updateConfirmButtons();
         updateServeCompleteButtons();
     });

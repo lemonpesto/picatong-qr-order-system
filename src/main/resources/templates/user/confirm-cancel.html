@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <title>결제확인</title>
 
-    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/user-unified.css" />
 </head>
 
-<body>
-<div th:replace="~{fragments/nav :: nav(${navTitle}, @{/items}, ${tableNum})}"></div>
+<body class="user">
+<div th:replace="~{fragments/nav :: nav(${navTitle}, null, ${tableNum}, false)}"></div>
 
-<div class="confirm-cancel-container">
-    <div class="inline-action">
-        <p class="cart-notice">주문이 취소되었습니다</p>
-        <a th:href="@{/items}" id="menu-btn" class="outline-button inline-button">메뉴 보기</a>
+<div class="user-container">
+    <div class="user-inline">
+        <p class="user-inline__text">주문이 취소되었습니다</p>
+        <a th:href="@{/items}" class="u-btn u-btn--outline user-inline__btn" style="max-width: 220px;">메뉴 보러가기</a>
     </div>
 </div>
 </body>

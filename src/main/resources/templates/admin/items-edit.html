@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -6,75 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title th:text="${pageTitle}">관리자 페이지</title>
 
-    <link rel="stylesheet" th:href="@{/css/admin.css}" />
-
+    <link rel="stylesheet" th:href="@{/css/admin-unified.css}" />
     <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
 </head>
-<body>
 
+<body class="admin">
 <!-- 공통 사이드바 & 상단바 -->
 <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
 
-<div class="topbar">
-    <i class="fas fa-bars" id="nav-bars"></i>
-    <span class="page-title" th:text="${pageTitle}">관리자 페이지</span>
-</div>
+<header class="admin-topbar">
+    <i class="fas fa-bars admin-topbar__toggle" id="nav-bars"></i>
+    <span class="admin-topbar__title" th:text="${pageTitle}">관리자 페이지</span>
+</header>
 
-<!-- 공통 토스트 메시지 -->
 <div th:replace="~{fragments/toast :: toast}"></div>
 <!-- 공통 사이드바 & 상단바 끝 -->
 
-<div class="edit-page">
-    <div class="edit-header">
-        <h3>메뉴 수정</h3>
+<main class="admin-form-page">
+    <div class="admin-form-page__header">
+        <h3 class="admin-form-page__title">메뉴 수정</h3>
 
         <!-- 삭제 -->
-        <form th:action="@{/admin/items/{id}/delete(id=${item.id})}" method="post" style="display: inline;">
-            <button type="submit" class="delete-text"
+        <form th:action="@{/admin/items/{id}/delete(id=${item.id})}" method="post" style="display:inline;">
+            <button type="submit" class="btn btn--ghost-danger"
                     onclick="return confirm('정말 이 메뉴를 삭제하시겠습니까?')">삭제</button>
         </form>
     </div>
 
     <!-- 수정 폼 -->
-    <form th:action="@{/admin/items/{id}(id=${item.id})}" method="post">
-        <label for="name">아이템 이름 *</label>
-        <input type="text" id="name" name="name" th:value="${item.name}" required />
+    <form class="admin-form" th:action="@{/admin/items/{id}(id=${item.id})}" method="post">
+        <label class="admin-form__label" for="name">아이템 이름 *</label>
+        <input class="admin-form__input" type="text" id="name" name="name" th:value="${item.name}" required />
 
-        <label for="price">가격 *</label>
-        <input
-                type="number"
-                id="price"
-                name="price"
-                min="0"
-                th:value="${item.price}"
-                required
-        />
+        <label class="admin-form__label" for="price">가격 *</label>
+        <input class="admin-form__input"
+               type="number" id="price" name="price" min="0"
+               th:value="${item.price}" required />
 
-        <label for="categoryId">카테고리 *</label>
-        <select id="categoryId" name="categoryId" required>
-            <option
-                    th:each="cat : ${categories}"
+        <label class="admin-form__label" for="categoryId">카테고리 *</label>
+        <select class="admin-form__select" id="categoryId" name="categoryId" required>
+            <option th:each="cat : ${categories}"
                     th:value="${cat.id}"
                     th:text="${cat.name}"
-                    th:selected="${item.category.id == cat.id}"
-            >
+                    th:selected="${item.category.id == cat.id}">
                 ==카테고리 선택==
             </option>
         </select>
 
-        <label for="isActive">상태</label>
-        <select id="isActive" name="isActive" required>
+        <label class="admin-form__label" for="isActive">상태</label>
+        <select class="admin-form__select" id="isActive" name="isActive" required>
             <option value="true" th:selected="${item.isActive}">판매 중</option>
             <option value="false" th:selected="${!item.isActive}">품절</option>
         </select>
 
-        <label for="description">설명</label>
-        <textarea id="description" name="description" rows="3" th:text="${item.description}"></textarea>
+        <label class="admin-form__label" for="description">설명</label>
+        <textarea class="admin-form__textarea" id="description" name="description" rows="3"
+                  th:text="${item.description}"></textarea>
 
-        <button type="submit" class="save-btn">저장</button>
-        <a th:href="@{/admin/items}" class="cancel-btn" style="display: block; text-align: center; margin-top: 10px;">취소</a>
+        <div class="admin-form__actions">
+            <button type="submit" class="btn btn--primary">저장</button>
+            <a th:href="@{/admin/items}" class="btn btn--cancel">취소</a>
+        </div>
     </form>
-</div>
+</main>
 
 <!-- 공통 스크립트 -->
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>

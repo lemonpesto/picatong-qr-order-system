@@ -5,114 +5,105 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title th:text="${pageTitle}">관리자 페이지</title>
 
-    <link rel="stylesheet" th:href="@{/css/admin.css}" />
-
+    <link rel="stylesheet" th:href="@{/css/admin-unified.css}" />
     <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
 </head>
-<body>
-    <!-- 공통 사이드바 & 상단바 -->
-    <div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
 
-    <div class="topbar">
-        <i class="fas fa-bars" id="nav-bars"></i>
-        <span class="page-title" th:text="${pageTitle}">관리자 페이지</span>
+<body class="admin">
+<!-- 공통 사이드바 & 상단바 -->
+<div th:replace="~{admin/fragments/sidebar :: sidebar}"></div>
+
+<header class="admin-topbar">
+    <i class="fas fa-bars admin-topbar__toggle" id="nav-bars"></i>
+    <span class="admin-topbar__title" th:text="${pageTitle}">관리자 페이지</span>
+</header>
+
+<div th:replace="~{fragments/toast :: toast}"></div>
+<!-- 공통 사이드바 & 상단바 끝 -->
+
+<main class="admin-section admin-section--menu">
+    <!-- 카테고리 탭 -->
+    <div class="admin-pilltabs">
+        <button class="admin-pilltabs__btn admin-pilltabs__btn--active js-category-tab" data-category="all">전체</button>
+        <button th:each="category : ${categories}"
+                class="admin-pilltabs__btn js-category-tab"
+                th:data-category="${category.id}"
+                th:text="${category.name}">
+            카테고리
+        </button>
     </div>
 
-    <div th:replace="~{fragments/toast :: toast}"></div> <!-- 공통 토스트 메시지 -->
-    <!-- 공통 사이드바 & 상단바 끝 -->
+    <!-- 메뉴 카드 -->
+    <div class="admin-grid">
+        <!-- 새 메뉴 추가 카드 -->
+        <a th:href="@{/admin/items/new}" class="admin-menu-card admin-menu-card--new js-menu-card-new">
+            <i class="fas fa-plus"></i>
+            <span>새 메뉴 추가</span>
+        </a>
 
-    <div class="menu-page">
-        <!-- 카테고리 탭 -->
-        <div class="category-tabs">
-            <button class="tab-btn active" data-category="all">전체</button>
-            <button th:each="category : ${categories}"
-                    class="tab-btn"
-                    th:data-category="${category.id}"
-                    th:text="${category.name}">
-                카테고리
-            </button>
-        </div>
-
-        <!-- 메뉴 카드 -->
-        <div class="menu-cards">
-            <!-- 새 메뉴 추가 카드 -->
-            <a th:href="@{/admin/items/new}" class="menu-card new-card">
-                <i class="fas fa-plus"></i>
-                <span>새 메뉴 추가</span>
-            </a>
-
-            <!-- 메뉴 목록 -->
-            <div th:each="item : ${items}"
-                 class="menu-card"
-                 th:data-category="${item.category.id}">
-                <div class="card-header">
-                    <h3 th:text="${item.name}">메뉴명</h3>
-                    <a th:href="@{/admin/items/{id}/edit(id=${item.id})}" class="edit-link">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                </div>
-                <p class="category" th:text="${item.category.name}">카테고리</p>
-                <p class="price" th:text="${#numbers.formatInteger(item.price, 0, 'COMMA')} + '원'">0원</p>
-                <p class="description" th:text="${item.description}">설명</p>
-                <p class="status"
-                   th:classappend="${item.isActive} ? 'on' : 'off'"
-                   th:text="${item.isActive} ? '판매중' : '품절'">
-                    판매중
-                </p>
+        <!-- 메뉴 목록 -->
+        <div th:each="item : ${items}"
+             class="admin-menu-card js-menu-card"
+             th:data-category="${item.category.id}">
+            <div class="admin-menu-card__header">
+                <h3 class="admin-menu-card__title" th:text="${item.name}">메뉴명</h3>
+                <a th:href="@{/admin/items/{id}/edit(id=${item.id})}" class="admin-menu-card__edit" aria-label="edit">
+                    <i class="fas fa-edit"></i>
+                </a>
             </div>
+
+            <p class="admin-menu-card__meta" th:text="${item.category.name}">카테고리</p>
+            <p class="admin-menu-card__price" th:text="${#numbers.formatInteger(item.price, 0, 'COMMA')} + '원'">0원</p>
+            <p class="admin-menu-card__desc" th:text="${item.description}">설명</p>
+
+            <p class="admin-menu-card__status"
+               th:classappend="${item.isActive} ? 'status--on' : 'status--off'"
+               th:text="${item.isActive} ? '판매 중' : '품절'">
+                판매 중
+            </p>
         </div>
     </div>
+</main>
 
-    <!-- 공통 스크립트 -->
-    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<!-- 공통 스크립트 -->
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 
-    <script th:src="@{/js/admin-sidebar.js}"></script>
-    <script th:src="@{/js/toast.js}"></script>
-    <!-- 공통 스크립트 끝 -->
+<script th:src="@{/js/admin-sidebar.js}"></script>
+<script th:src="@{/js/toast.js}"></script>
+<!-- 공통 스크립트 끝 -->
 
-    <script>
-        // 카테고리 필터링
-        const tabs = document.querySelectorAll('.tab-btn');
-        const cards = document.querySelectorAll('.menu-card:not(.new-card)');
+<script>
+    // 카테고리 필터링 (BEM 클래스에 맞춰 JS 훅 변경)
+    const tabs = document.querySelectorAll('.js-category-tab');
+    const cards = document.querySelectorAll('.js-menu-card');
 
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                const category = tab.dataset.category;
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const category = tab.dataset.category;
 
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
+            tabs.forEach(t => t.classList.remove('admin-pilltabs__btn--active'));
+            tab.classList.add('admin-pilltabs__btn--active');
 
-                cards.forEach(card => {
-                    if (category === 'all' || card.dataset.category === category) {
-                        card.style.display = 'block';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
+            cards.forEach(card => {
+                if (category === 'all' || card.dataset.category === category) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
             });
         });
+    });
 
-        // WebSocket 연결
-        const socket = new SockJS('/ws');
-        const stompClient = Stomp.over(socket);
+    // WebSocket 연결 (기존 로직 유지)
+    const socket = new SockJS('/ws');
+    const stompClient = Stomp.over(socket);
 
-        stompClient.connect({}, function(frame) {
-            // 메뉴 추가 알림
-            stompClient.subscribe('/topic/menuAdded', function(message) {
-                location.reload();
-            });
-
-            // 메뉴 수정 알림
-            stompClient.subscribe('/topic/menuUpdated', function(message) {
-                location.reload();
-            });
-
-            // 메뉴 삭제 알림
-            stompClient.subscribe('/topic/menuDeleted', function(message) {
-                location.reload();
-            });
-        });
-    </script>
+    stompClient.connect({}, function() {
+        stompClient.subscribe('/topic/menuAdded', function() { location.reload(); });
+        stompClient.subscribe('/topic/menuUpdated', function() { location.reload(); });
+        stompClient.subscribe('/topic/menuDeleted', function() { location.reload(); });
+    });
+</script>
 </body>
 </html>

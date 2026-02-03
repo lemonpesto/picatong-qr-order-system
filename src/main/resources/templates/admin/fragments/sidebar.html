@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
 </head>
 <body>
-<div th:fragment="sidebar" id="sidebar" class="sidebar">
-    <a th:href="@{/admin/kitchen/orders}">주방</a>
-    <a th:href="@{/admin/orders/hall}">홀</a>
-    <a th:href="@{/admin/items}">메뉴 관리</a>
-    <a th:href="@{/admin/orders/history}">주문 내역</a>
+<div th:fragment="sidebar" id="sidebar" class="admin-sidebar">
+    <a th:href="@{/admin/orders/hall}" class="admin-sidebar__link">홀</a>
+    <a th:href="@{/admin/kitchen/orders}" class="admin-sidebar__link">주방</a>
+    <a th:href="@{/admin/items}" class="admin-sidebar__link">메뉴 관리</a>
+    <a th:href="@{/admin/orders/history}" class="admin-sidebar__link">주문 내역</a>
 </div>
 </body>
 </html>

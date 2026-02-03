@@ -1,28 +1,35 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <body>
-<!-- fragments/nav.html -->
-<nav class="nav" th:fragment="nav(navTitle, navBack, tableNum)">
+<nav class="user-nav" th:fragment="nav(navTitle, navBack, tableNum, showHistory)">
     <!-- navBack이 있으면: 뒤로가기 + 타이틀 -->
-    <div class="nav-left" th:if="${navBack != null}">
-        <a th:href="${navBack}" class="logo back-link">
+    <div class="user-nav__left">
+        <a th:if="${navBack != null}"
+           th:href="${navBack}"
+           class="user-nav__back"
+           aria-label="back">
             <i class="fa-solid fa-chevron-left"></i>
         </a>
-        <span class="nav-title" th:text="${navTitle}">장바구니</span>
+
+        <!-- 타이틀 -->
+        <div class="user-nav__title"
+           th:text="${navTitle != null ? navTitle : '피카통'}">
+            피카통
+        </div>
     </div>
 
-    <!-- navBack은 없고 navTitle만 있으면: 타이틀만 -->
-    <span class="nav-title" th:if="${navBack == null and navTitle != null}" th:text="${navTitle}">
-        피카통
-      </span>
-
-    <!-- navTitle도 없으면: 기본 로고 -->
-    <a th:if="${navBack == null and navTitle == null}" href="/items" class="logo">피카통</a>
-
-    <div class="nav-right">
-        <span class="table-label" th:text="'T' + ${tableNum}">T1</span>
-        <a href="/orders/history">주문내역</a>
+    <!-- 오른쪽 영역(주문내역 / 테이블)-->
+    <div class="user-nav__right">
+        <a class="user-nav__link"
+           th:if="${returnUrl != null}"
+           th:href="@{/orders/history(returnUrl=${returnUrl})}">
+            주문내역
+        </a>
+        <div class="user-nav__table">
+            테이블<span class="user-nav__table-num" th:text="${tableNum}">1</span>
+        </div>
     </div>
+
 </nav>
 </body>
 </html>

@@ -1,12 +1,3 @@
-/* ==============================================
-   Admin Unified CSS
-   모든 관리자 페이지용 CSS를 하나의 파일로 통합
-   ============================================== */
-
-/* ======================
-   Base Styles
-   ====================== */
-
 @font-face {
     font-family: "Pretendard";
     font-style: normal;
@@ -18,525 +9,184 @@
     url("/fonts/Pretendard-Regular.ttf") format("truetype");
 }
 
-/* Global Font */
-body,
-input,
-button,
-textarea {
-    font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+/* =========================================================
+ * Admin Theme Tokens
+ * ========================================================= */
+:root {
+    --a-font: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+    --a-bg: #ffffff;
+    --a-text: #111827;
+    --a-muted: #6b7280;
+    --a-line: #e5e7eb;
+    --a-soft: #f3f4f6;
+    --a-card: #ffffff;
+
+    --a-primary: #111827;
+    --a-blue: #0ea5e9;
+    --a-green: #16a34a;
+    --a-red: #ef4444;
+
+    --a-radius: 14px;
+    --a-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+
+    --a-topbar-h: 50px;
+    --a-sidebar-w: 180px;
+
+    --a-pad-x: 16px;
+    --a-pad-y: 16px;
 }
 
-* {
+/* =========================================================
+ * Base / Reset (Admin Only)
+ * ========================================================= */
+body.admin,
+body.admin input,
+body.admin button,
+body.admin textarea,
+body.admin select {
+    font-family: var(--a-font);
+}
+
+body.admin {
+    margin: 0;
+    background: var(--a-bg);
+    color: var(--a-text);
+    font-size: 16px;
     -webkit-text-size-adjust: 100%;
 }
 
-body {
-    margin: 0;
-    background: #fff;
+body.admin a {
+    color: inherit;
+    text-decoration: none;
 }
 
-ul {
-    list-style-type: none;
+body.admin ul {
+    list-style: none;
     padding: 0;
     margin: 0;
 }
 
-a {
-    text-decoration: none;
-    color: #222;
-}
-
-/* ======================
-   Layout Components
-   ====================== */
-
-/* Topbar */
-.topbar {
+/* =========================================================
+ * Topbar (Block)
+ * .admin-topbar
+ * ========================================================= */
+.admin-topbar {
     position: sticky;
     top: 0;
-    height: 50px;
+    z-index: 1001;
+
+    height: var(--a-topbar-h);
     display: flex;
     align-items: center;
-    background: #fff;
-    padding: 0 15px;
-    font-weight: 600;
-    z-index: 1001;
+    gap: 10px;
+
+    background: var(--a-bg);
+    padding: 0 var(--a-pad-x);
     padding-top: env(safe-area-inset-top);
+    /*border-bottom: 1px solid var(--a-line);*/
 }
 
-.topbar__menu-icon {
+.admin-topbar__toggle {
     font-size: 24px;
     cursor: pointer;
+    user-select: none;
 }
 
-.topbar__title {
-    margin-left: 9px;
+.admin-topbar__title {
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 800;
 }
 
-/* Sidebar */
-.sidebar {
+/* =========================================================
+ * Sidebar (Block)
+ * .admin-sidebar
+ * ========================================================= */
+.admin-sidebar {
     position: fixed;
     top: 0;
     left: 0;
-    width: 180px;
+    z-index: 1000;
+
+    width: var(--a-sidebar-w);
     height: 100%;
-    padding-top: 60px;
+    padding-top: calc(var(--a-topbar-h) + 10px);
+
     background: #272727;
     transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    z-index: 1000;
+    transition: transform 0.25s ease;
 }
 
-.sidebar--open {
+/* admin-sidebar.js가 .open을 토글하고 있는 전제 유지 */
+.admin-sidebar.open {
     transform: translateX(0);
 }
 
-.sidebar__link {
+.admin-sidebar .admin-sidebar__link {
     display: block;
     padding: 12px 16px;
     font-size: 16px;
     color: #ecf0f1;
 }
 
-.sidebar__link:hover {
+.admin-sidebar .admin-sidebar__link:hover {
     background: #3c3c3c;
 }
 
-/* ======================
-   Toast Messages
-   ====================== */
-
-.toast {
-    position: fixed;
-    top: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 14px 24px;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 600;
-    z-index: 2000;
-    animation: toast-slide-down 0.3s ease-out;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    max-width: 90%;
-    text-align: center;
+/* =========================================================
+ * Layout / Container
+ * ========================================================= */
+.admin-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--a-pad-x) 24px;
 }
 
-.toast--success {
-    background: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+.admin-section {
+    padding: var(--a-pad-y) var(--a-pad-x);
 }
 
-.toast--error {
-    background: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+.admin-section--menu {
+    padding-bottom: 90px; /* 플로팅 버튼 등 대비(기존 유지) */
 }
 
-@keyframes toast-slide-down {
-    from {
-        opacity: 0;
-        transform: translateX(-50%) translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
-}
-
-/* ======================
-   Menu Management Page
-   ====================== */
-
-.menu-page {
-    padding: 0 16px 90px;
-}
-
-/* Category Tabs */
-.category-tabs {
-    display: flex;
-    gap: 14px;
-    background: #fff;
-    border-radius: 2px;
-    margin: 18px 0 28px;
-    overflow-x: auto;
+/* =========================================================
+ * Tabs (Block)
+ * .admin-tabs
+ * ========================================================= */
+.admin-tabs {
+    position: sticky;
+    top: var(--a-topbar-h);
     z-index: 999;
-}
 
-.category-tabs::-webkit-scrollbar {
-    display: none;
-}
-
-.category-tabs__btn {
-    margin: 0;
-    white-space: nowrap;
-    padding: 8px 16px;
-    background: #f2f2f2;
-    color: #484848;
-    border: none;
-    border-radius: 2px;
-    cursor: pointer;
-    transition: background 0.2s;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.category-tabs__btn--active {
-    background: #222;
-    color: #fff;
-}
-
-/* Menu Cards */
-.menu-cards {
-    display: grid;
-    gap: 18px;
-    grid-template-columns: 1fr;
-    margin-bottom: 18px;
-}
-
-.menu-card {
-    position: relative;
-    background: #fff;
-    border-radius: 4px;
-    padding: 12px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-.menu-card--new {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 120px;
-    border: 2px dashed #ddd;
-    background: #fafafa;
-    color: #555;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.menu-card--new:hover {
-    background: #f0f0f0;
-}
-
-.menu-card--new i {
-    font-size: 24px;
-    margin-bottom: 8px;
-}
-
-.menu-card__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.menu-card__title {
-    margin: 0;
-    font-size: 16px;
-}
-
-.menu-card__edit-link {
-    color: #007bff;
-    transition: color 0.2s;
-}
-
-.menu-card__edit-link:hover {
-    color: #0056b3;
-}
-
-.menu-card__category {
-    margin: 6px 0;
-    font-size: 14px;
-    color: #555;
-}
-
-.menu-card__price {
-    margin: 6px 0;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.menu-card__description {
-    margin: 6px 0;
-    font-size: 14px;
-    color: #666;
-}
-
-.menu-card__status {
-    margin: 6px 0 0;
-    font-size: 14px;
-}
-
-.menu-card__status--active {
-    color: green;
-}
-
-.menu-card__status--inactive {
-    color: red;
-}
-
-/* ======================
-   Menu Edit/New Form
-   ====================== */
-
-.edit-page {
-    padding: 20px 16px;
-}
-
-.edit-page__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.edit-page__title {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 700;
-}
-
-.edit-page__delete-btn {
-    background: none;
-    border: none;
-    color: #e74c3c;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: underline;
-    padding: 0;
-}
-
-.edit-page__delete-btn:hover {
-    color: #c0392b;
-}
-
-/* Form Elements */
-.edit-form {
-    display: flex;
-    flex-direction: column;
-}
-
-.edit-form__label {
-    margin-top: 16px;
-    margin-bottom: 6px;
-    font-weight: 600;
-    font-size: 14px;
-}
-
-.edit-form__input,
-.edit-form__select,
-.edit-form__textarea {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-}
-
-.edit-form__input:focus,
-.edit-form__select:focus,
-.edit-form__textarea:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
-}
-
-.edit-form__textarea {
-    resize: vertical;
-    min-height: 80px;
-}
-
-.edit-form__btn {
-    margin-top: 20px;
-    padding: 12px;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.edit-form__btn--save {
-    background: #007bff;
-    color: #fff;
-}
-
-.edit-form__btn--save:hover {
-    background: #0056b3;
-}
-
-.edit-form__btn--cancel {
-    display: block;
-    text-align: center;
-    margin-top: 10px;
-    background: #f2f2f2;
-    color: #484848;
-}
-
-.edit-form__btn--cancel:hover {
-    background: #e0e0e0;
-}
-
-/* ======================
-   Orders Common Styles
-   ====================== */
-
-.orders-container {
-    padding: 0 16px 16px;
-}
-
-/* Order Card Base */
-.order-card {
-    position: relative;
-    background: #fff;
-    border: 2px solid #e5e7eb;
-    border-radius: 14px;
-    padding: 18px;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-}
-
-.order-card__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.order-card__table-num {
-    font-size: 18px;
-    font-weight: 800;
-}
-
-.order-card__time {
-    font-size: 13px;
-    color: #6b7280;
-}
-
-/* Order Items List */
-.order-card__items {
-    margin: 14px 0 10px;
-}
-
-.order-card__item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    font-size: 16px;
-    border-bottom: 1px dashed #f1f5f9;
-}
-
-.order-card__item:last-child {
-    border-bottom: none;
-}
-
-.order-card__item-name {
-    font-weight: 700;
-    color: #111827;
-}
-
-/* Order Total */
-.order-card__total {
-    font-size: 22px;
-    font-weight: 800;
-    text-align: right;
-    margin: 10px 0 14px;
-    color: #6b7280;
-}
-
-/* Order List Grid */
-.order-list {
-    display: grid;
-    gap: 18px;
-    grid-template-columns: 1fr;
-    margin-bottom: 18px;
-}
-
-/* Empty State */
-.empty-state {
-    padding: 60px 20px;
-    text-align: center;
-}
-
-.empty-state__text {
-    color: #888;
-    font-size: 16px;
-}
-
-/* Status Badges */
-.status-badge {
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-size: 14px;
-    font-weight: 500;
-    margin-left: 10px;
-}
-
-.status-badge--pending {
-    background: #f3f4f6;
-    color: #6b7280;
-}
-
-.status-badge--waiting {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.status-badge--cooking {
-    background: #f3f4f6;
-    color: #6b7280;
-}
-
-.status-badge--serving {
-    background: #d1ecf1;
-    color: #0c5460;
-}
-
-.status-badge--completed {
-    background: #d4edda;
-    color: #155724;
-}
-
-/* ======================
-   Hall Orders (입금확인/서빙)
-   ====================== */
-
-/* Hall Tabs */
-.hall-tabs {
     display: flex;
     gap: 24px;
-    margin-bottom: 24px;
-    background: #fff;
-    position: sticky;
-    top: 50px;
-    z-index: 100;
-    padding-top: 10px;
+
+    background: var(--a-bg);
+    border-bottom: 1px solid var(--a-line);
 }
 
-.hall-tabs__link {
+.admin-tabs__tab {
     flex: none;
-    background: none;
-    border: none;
     padding: 12px 0;
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 700;
     color: #737373;
-    cursor: pointer;
     position: relative;
-    transition: color 0.2s;
 }
 
-.hall-tabs__link--active {
+.admin-tabs__tab:link,
+.admin-tabs__tab:visited {
+    color: #737373;
+}
+
+.admin-tabs__tab--active:link,
+.admin-tabs__tab--active:visited {
     color: #272727;
 }
 
-.hall-tabs__link--active::after {
+
+.admin-tabs__tab--active::after {
     content: "";
     position: absolute;
     left: 0;
@@ -546,391 +196,519 @@ a {
     background: #272727;
 }
 
-/* Confirm Tab (입금확인) */
-.confirm-tab .order-card--pending {
-    border-color: #d1d5db;
+/* =========================================================
+ * Pill Tabs (Menu Category)
+ * .admin-pilltabs
+ * ========================================================= */
+.admin-pilltabs {
+    position: sticky;
+    top: var(--a-topbar-h);
+    z-index: 999;
+
+    display: flex;
+    gap: 10px;
+    padding: 12px var(--a-pad-x);
+    margin: 0;
+
+    overflow-x: auto;
+    background: var(--a-bg);
+    border-bottom: 1px solid var(--a-line);
 }
 
-.confirm-tab .order-card--waiting {
-    border-color: #22c55e;
-    box-shadow: 0 10px 24px rgba(34, 197, 94, 0.12);
+.admin-pilltabs::-webkit-scrollbar {
+    display: none;
 }
 
-.confirm-tab .order-card--waiting .order-card__total {
-    color: #16a34a;
-}
+.admin-pilltabs__btn {
+    padding: 7px 15px;
+    border: 0;
+    border-radius: 999px;
+    background: #f2f2f2;
+    color: #737373;
 
-.confirm-tab__actions {
-    display: grid;
-    grid-template-columns: 1fr 3fr;
-    gap: 12px;
-}
-
-.confirm-tab__btn {
-    width: 100%;
-    height: 52px;
-    border-radius: 12px;
+    font-weight: 700;
     font-size: 16px;
-    font-weight: 800;
-    border: none;
     cursor: pointer;
-    transition: all 0.2s;
+    white-space: nowrap;
 }
 
-.confirm-tab__btn--cancel {
-    background: #f3f4f6;
-    color: #6b7280;
-}
-
-.confirm-tab__btn--cancel:hover:not(:disabled) {
-    background: #e5e7eb;
-}
-
-.confirm-tab__btn--confirm {
-    background: #16a34a;
+.admin-pilltabs__btn--active {
+    background: #222;
     color: #fff;
 }
 
-.confirm-tab__btn--confirm:hover:not(:disabled) {
-    background: #15803d;
+/* =========================================================
+ * Grid (Cards Wrapper)
+ * ========================================================= */
+.admin-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    margin-top: 16px;
 }
 
-.confirm-tab__btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+/* =========================================================
+ * Card (Block)
+ * .admin-card
+ * ========================================================= */
+.admin-card {
+    background: var(--a-card);
+    border: 2px solid var(--a-line);
+    border-radius: var(--a-radius);
+    box-shadow: var(--a-shadow);
+    padding: 18px;
 }
 
-/* Serve Tab (서빙) */
-.serve-tab .order-card--ready {
-    border-color: #0ea5e9;
+.admin-card--soft {
+    border-color: var(--a-line);
+}
+
+.admin-card--accent-green {
+    border-color: var(--a-green);
+    box-shadow: 0 10px 24px rgba(22, 163, 74, 0.12);
+}
+
+.admin-card--accent-blue {
+    border-color: var(--a-blue);
     box-shadow: 0 10px 24px rgba(14, 165, 233, 0.14);
 }
 
-.serve-tab__items {
+.admin-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.admin-card__title {
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.admin-card__meta {
+    font-size: 13px;
+    color: var(--a-muted);
+}
+
+/* =========================================================
+ * Menu Cards (Block)
+ * .admin-menu-card
+ * ========================================================= */
+.admin-menu-card {
+    background: var(--a-card);
+    border-radius: var(--a-radius);
+    padding: 12px;
+    box-shadow: var(--a-shadow);
+    border: 1px solid var(--a-line);
+}
+
+.admin-menu-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-menu-card__title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.admin-menu-card__edit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-menu-card__meta,
+.admin-menu-card__desc {
+    margin: 6px 0;
+    font-size: 16px;
+    color: #555;
+}
+
+.admin-menu-card__price {
+    margin: 6px 0;
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.admin-menu-card__status {
+    margin: 6px 0 0;
+    font-weight: 900;
+    font-size: 16px;
+}
+
+.admin-menu-card__status.status--on {
+    color: #16a34a;
+}
+.admin-menu-card__status.status--off {
+    color: #ef4444;
+}
+
+/* 새 메뉴 카드 */
+.admin-menu-card--new {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    color: #888;
+    cursor: pointer;
+    min-height: 55px;
+
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.admin-menu-card--new i {
+    margin-bottom: 8px;
+    font-size: 18px;
+}
+
+/* =========================================================
+ * Orders (Block)
+ * .admin-order
+ * ========================================================= */
+.admin-order__list {
+    display: grid;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.admin-order__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.admin-order__left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-order__table {
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.admin-order__status {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 800;
+    background: var(--a-soft);
+    color: var(--a-muted);
+}
+
+#paid-list .admin-order__status--waiting,
+#history-list .admin-order__status.completed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+#history-list .admin-order__status.cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.admin-order__items {
+    margin: 14px 0 10px;
+}
+
+.admin-order__itemline {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+
+    padding: 10px 0;
+    border-bottom: 1px dashed #f1f5f9;
+    font-size: 16px;
+}
+
+.admin-order__itemline:last-child {
+    border-bottom: none;
+}
+
+.admin-order__itemname {
+    font-weight: 900;
+    min-width: 0;
+}
+
+.admin-order__total {
+    text-align: right;
+    font-size: 22px;
+    font-weight: 900;
+    margin: 10px 0 14px;
+    color: var(--a-muted);
+}
+
+#history-list .admin-order__total {
+    color: var(--a-text);
+}
+
+/* 입금 확인 대기일 때만 총액을 유색으로 */
+.admin-card--accent-green .admin-order__total {
+    color: var(--a-green);
+}
+
+.admin-order__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.admin-order__actions--confirm {
+    grid-template-columns: 1fr 2fr; /* 취소 1/4, 확인 3/4 */
+}
+
+/* =========================================================
+ * Checklist (Serve/Kitchen)
+ * .admin-checklist
+ * ========================================================= */
+.admin-checklist {
     margin: 14px 0 12px;
 }
 
-.serve-tab__item {
+.admin-checklist__row {
     margin: 10px 0;
 }
 
-.serve-tab__item-label {
+.admin-checklist__label {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 12px;
+
+    padding: 12px;
     border-radius: 12px;
-    background: #f9fafb;
-    transition: background 0.2s;
+    background: #f3f4f6;
 }
 
-.serve-tab__item-label--enabled {
+/* enabled(서빙에서 활성화된 항목) 강조 */
+#serve-list .admin-checklist__label:has(input.admin-checklist__checkbox:not(:disabled)) {
     background: #eff6ff;
 }
 
-.serve-tab__checkbox {
+.admin-checklist__checkbox {
     transform: scale(1.25);
     transform-origin: left center;
     margin-right: 4px;
     accent-color: #222;
 }
 
-.serve-tab__checkbox:disabled + .serve-tab__item-text {
-    color: #9ca3af;
+.admin-checklist__text {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1;
+    gap: 12px;
+    min-width: 0;
 }
 
-.serve-tab__checkbox:checked + .serve-tab__item-text {
+.admin-checklist__name {
+    font-size: 16px;
+    font-weight: 900;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--a-text);
+}
+
+.admin-checklist__qty {
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--a-text);
+}
+
+/* checked -> 취소선(주방) */
+.admin-checklist__checkbox:checked + .admin-checklist__text {
     color: #9ca3af;
     text-decoration: line-through;
 }
 
-.serve-tab__item-text {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex: 1;
-    min-width: 0;
-    gap: 12px;
-}
-
-.serve-tab__item-name {
-    font-size: 16px;
-    font-weight: 700;
-    color: #111827;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.serve-tab__item-qty {
-    font-size: 14px;
-    color: #6b7280;
-    white-space: nowrap;
-}
-
-.serve-tab__footer {
-    display: block;
-    width: 100%;
-    margin-top: 12px;
-}
-
-.serve-tab__complete-btn {
-    display: block;
-    width: 100%;
-    height: 50px;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 800;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.serve-tab__complete-btn:disabled {
-    background: #e5e7eb;
+/* disabled -> 더 흐리게(서빙) */
+.admin-checklist__checkbox:disabled + .admin-checklist__text {
     color: #9ca3af;
+    text-decoration: none;
+}
+
+
+/* =========================================================
+ * Buttons (Block)
+ * .btn
+ * ========================================================= */
+.btn {
+    height: 52px;
+    width: 100%;
+    border: 0;
+    border-radius: 12px;
+    cursor: pointer;
+
+    font-size: 16px;
+    font-weight: 900;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn:active {
+    transform: scale(0.99);
+}
+
+.btn:disabled {
+    background: var(--a-line) !important;
+    color: #9ca3af !important;
     cursor: not-allowed;
     opacity: 1;
 }
 
-.serve-tab__complete-btn:enabled {
-    background: #0ea5e9;
+.btn--primary {
+    background: var(--a-blue);
     color: #fff;
 }
 
-.serve-tab__complete-btn:enabled:hover {
-    background: #0284c7;
+.btn--dark {
+    background: var(--a-primary);
+    color: #fff;
 }
 
-.serve-tab__complete-btn:enabled:active {
-    transform: scale(0.99);
+.btn--confirm {
+    background: var(--a-green);
+    color: #fff;
 }
 
-/* ======================
-   Kitchen Orders (주방)
-   ====================== */
-
-.kitchen-page {
-    padding: 16px 24px;
+.btn--cancel {
+    background: var(--a-soft);
+    color: var(--a-muted);
 }
 
-.kitchen-page .order-list {
+.btn--ghost-danger {
+    background: transparent;
+    color: var(--a-red);
+    height: auto;
+    width: auto;
+    padding: 0;
+    border-radius: 0;
+    text-decoration: underline;
+    font-size: 14px;
+    font-weight: 900;
+}
+
+/* =========================================================
+ * Form (Block)
+ * .admin-form
+ * ========================================================= */
+.admin-form-page {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+.admin-form-page__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.admin-form-page__title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.admin-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-form__label {
+    margin-top: 16px;
+    font-weight: 900;
+}
+
+.admin-form__label .essential-input {
+    color: var(--a-red);
+}
+
+.admin-form__input,
+.admin-form__select,
+.admin-form__textarea {
+    padding: 10px 12px;
+    font-size: 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    outline: none;
+}
+
+.admin-form__textarea {
+    resize: vertical;
+}
+
+.admin-form__actions {
+    margin-top: 14px;
     display: grid;
-    gap: 16px;
-    grid-template-columns: 1fr;
-}
-
-/* Kitchen Order Card */
-.kitchen-page .order-card {
-    border: 2px solid #e5e7eb;
-    border-radius: 14px;
-    padding: 18px 18px 14px;
-    background: #fff;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-}
-
-@media (hover: hover) {
-    .kitchen-page .order-card:hover {
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
-    }
-}
-
-.kitchen-page .order-card__header {
-    margin-bottom: 14px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.kitchen-page .order-card__table-num {
-    font-size: 18px;
-    font-weight: 800;
-}
-
-.kitchen-page .order-card__time {
-    font-size: 13px;
-    color: #6b7280;
-}
-
-/* Kitchen Items */
-.kitchen-page .order-card__items {
-    margin: 14px 0 12px;
-}
-
-.kitchen-page .order-card__items li {
-    margin: 10px 0;
-}
-
-.kitchen__item-label {
-    display: flex;
-    align-items: center;
     gap: 10px;
-    padding: 12px 12px;
-    border-radius: 12px;
-    background: #f9fafb;
 }
 
-.kitchen__checkbox {
-    transform: scale(1.25);
-    transform-origin: left center;
-    margin-right: 4px;
-    accent-color: #222;
-}
-
-.kitchen__checkbox:checked + .kitchen__item-text {
-    color: #9ca3af;
-    text-decoration: line-through;
-}
-
-.kitchen__checkbox:disabled + .kitchen__item-text {
-    color: #cbd5e1;
-}
-
-.kitchen__item-text {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex: 1;
-    min-width: 0;
-    gap: 12px;
-}
-
-.kitchen__item-name {
+/* =========================================================
+ * Empty State
+ * ========================================================= */
+.admin-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
     font-size: 16px;
-    font-weight: 700;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
-.kitchen__item-qty {
-    font-size: 14px;
-    color: #6b7280;
-    white-space: nowrap;
-}
-
-/* Kitchen Footer */
-.kitchen__footer {
-    margin-top: 10px;
-    display: flex;
-    justify-content: center;
-}
-
-.kitchen__complete-btn {
-    width: 100%;
-    height: 50px;
-    border: none;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 800;
-    cursor: pointer;
-    transition: transform 0.1s;
-    background: #111827;
+/* =========================================================
+ * Toast (compat: keep .toast + success/error)
+ * ========================================================= */
+.toast {
+    position: fixed;
+    bottom: 65px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(50, 50, 50, 0.9);
     color: #fff;
-}
-
-.kitchen__complete-btn:hover {
-    background: #000;
-}
-
-.kitchen__complete-btn:active {
-    transform: scale(0.99);
-}
-
-.kitchen__complete-btn:disabled {
-    background: #e5e7eb;
-    color: #9ca3af;
-    cursor: not-allowed;
-}
-
-/* ======================
-   Order History
-   ====================== */
-
-.history-page .order-card {
-    border: 2px solid #e5e7eb;
-    border-radius: 14px;
-    padding: 18px;
-    background: #fff;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-}
-
-.history-page .order-card__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-}
-
-.history-page .order-card__left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.history-page .order-card__right {
-    display: flex;
-    align-items: center;
-}
-
-.history-page .order-card__table-num {
-    font-size: 18px;
-    font-weight: 800;
-}
-
-.history-page .order-card__time {
+    padding: 6px 10px;
+    border-radius: 999px;
     font-size: 14px;
-    color: #6b7280;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 9999;
 }
 
-.history-page .order-card__status {
-    font-size: 14px;
-    font-weight: 600;
+.toast.show {
+    opacity: 1;
 }
 
-.history-page .order-card__status--completed {
-    color: #16a34a;
+/* 성공/에러: 기존 success/error 클래스와 병행 가능 */
+.toast--success,
+.toast.success {
+    background: rgba(22, 163, 74, 0.92);
 }
 
-.history-page .order-card__status--pending {
-    color: #ef4444;
+.toast--error,
+.toast.error {
+    background: rgba(239, 68, 68, 0.92);
 }
 
-/* History Items */
-.history-page .order-card__items {
-    margin: 14px 0;
-}
-
-.history-page .order-card__item {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    font-size: 15px;
-}
-
-.history-page .order-card__item-name {
-    font-weight: 600;
-}
-
-.history-page .order-card__item-qty {
-    color: #6b7280;
-}
-
-/* History Footer */
-.history-page .order-card__footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 1px solid #e5e7eb;
-    padding-top: 12px;
-    margin-top: 8px;
-}
-
-.history-page .order-card__footer-label {
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.history-page .order-card__footer-amount {
-    font-size: 18px;
-    font-weight: 800;
+/* =========================================================
+ * Utility
+ * ========================================================= */
+.u-hidden {
+    display: none !important;
 }

@@ -5,79 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>결제</title>
 
-    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/user-unified.css" />
     <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
 </head>
 
-<body>
-<div th:replace="~{fragments/nav :: nav(${navTitle}, ${navBack}, ${tableNum})}"></div>
+<body class="user">
+<div th:replace="~{fragments/nav :: nav(${navTitle}, null, ${tableNum}, false)}"></div>
 
-<div class="payment-container">
-    <h3>
-        총
-        <span class="highlight" th:text="${#numbers.formatInteger(summary.totalAmount, 0, 'COMMA')}">0</span>원<br />
-        아래 계좌로 지금 바로 입금해주세요!
-    </h3>
+<div id="payment-page" class="user-center">
+    <section class="user-center__content">
+        <h3 class="user-center__title">
+            총&nbsp;<span class="u-highlight" th:text="${#numbers.formatInteger(summary.totalAmount, 0, 'COMMA')}">0</span>원<br />
+            아래 계좌로 지금 바로 입금해주세요!
+        </h3>
 
-    <div class="subtext">
-        <span class="account">
-          <span id="account-number" class="account-number" style="cursor: pointer">카카오뱅크 3333257857250</span>
-          <span> (김세진)</span><br />
-<!--            !!-->
-        </span>
+        <div class="user-center__sub">
+            <span class="user-account">
+              <span id="account-number" class="user-account__number">카카오뱅크 3333257857250</span>
+              <span> (김세진)</span><br />
+            </span>
 
-        <p class="small" style="margin-top: 8px">
-          <span style="font-weight: 500">
-            * 입금자명은 테이블 번호인
-            <span class="highlight" style="font-weight: 700" th:text="${tableNum}">1</span>로 설정해 주세요
-          </span>
-        </p>
-    </div>
+            <p style="margin-top: 8px">
+              <span style="font-weight: 800">
+                * 입금자명은 테이블 번호인
+                <span class="u-highlight" style="font-weight: 900" th:text="${tableNum}">1</span>로 설정해 주세요
+              </span>
+            </p>
+        </div>
 
-    <div id="toast" class="toast"></div>
+        <div id="toast" class="toast"></div>
+    </section>
 
-    <div class="bottom-bar">
-        <form th:action="@{/payment/cancel}" method="post" style="flex: 1; margin-right: 8px;">
-            <input type="hidden" name="orderId" th:value="${orderId}" />
-            <button type="submit" class="bottom-button" style="background-color: #6c757d;">
-                주문 취소
-            </button>
-        </form>
+    <section class="user-center__actions">
+        <div class="user-bottombar">
+            <form th:action="@{/payment/cancel}" method="post" style="flex: 1;">
+                <input type="hidden" name="orderId" th:value="${orderId}" />
+                <button type="submit" class="u-btn btn--cancel user-bottombar__btn" style="flex: 1;">
+                    주문 취소
+                </button>
+            </form>
 
-        <form th:action="@{/payment}" class="payment-form" method="post" style="flex: 1;">
-            <input type="hidden" name="orderId" th:value="${orderId}" />
-            <button type="submit" class="bottom-button">
-                총
-                <span th:text="${#numbers.formatInteger(summary.totalAmount, 0, 'COMMA')}">0</span>원 입금 완료
-            </button>
-        </form>
-    </div>
+            <form th:action="@{/payment}" class="payment-form" method="post" style="flex: 2;">
+                <input type="hidden" name="orderId" th:value="${orderId}" />
+                <button type="submit" class="u-btn u-btn--primary user-bottombar__btn">
+                    총&nbsp;<span th:text="${#numbers.formatInteger(summary.totalAmount, 0, 'COMMA')}">0</span>원 입금 완료
+                </button>
+            </form>
+        </div>
+    </section>
 </div>
 
+<script th:src="@{/js/toast.js}"></script>
+
 <script>
-    // smartSticky.js
     window.addEventListener("DOMContentLoaded", () => {
-        const bar = document.querySelector(".bottom-bar");
-        if (!bar) return;
+        const account = document.getElementById("account-number");
+        const toast = document.getElementById("toast");
 
-        const isScrollable = document.body.scrollHeight > window.innerHeight;
-        bar.style.position = isScrollable ? "sticky" : "fixed";
-    });
-
-    const account = document.getElementById("account-number");
-    const toast = document.getElementById("toast");
-
-    account?.addEventListener("click", async () => {
-        try {
-            await navigator.clipboard.writeText("카카오뱅크 3333257857250");
-            toast.textContent = "계좌번호가 복사됐어요";
-            toast.classList.add("show");
-            setTimeout(() => toast.classList.remove("show"), 2000);
-        } catch (err) {
-            toast.textContent = "복사에 실패했습니다: " + err;
-            toast.classList.add("show");
-            setTimeout(() => toast.classList.remove("show"), 2000);
-        }
+        account?.addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText("카카오뱅크 3333257857250");
+                toast.textContent = "계좌번호가 복사됐어요";
+                toast.classList.add("show");
+                setTimeout(() => toast.classList.remove("show"), 2000);
+            } catch (err) {
+                toast.textContent = "복사에 실패했습니다: " + err;
+                toast.classList.add("show");
+                setTimeout(() => toast.classList.remove("show"), 2000);
+            }
+        });
     });
 </script>
 </body>
