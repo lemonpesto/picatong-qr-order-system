@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>결제확인</title>
 
-    <link rel="stylesheet" th:href="@{/main.css}" />
+    <link rel="stylesheet" href="/css/main.css" />
     <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
 </head>
 
@@ -22,13 +22,12 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/stomp-websocket@2.3.4/lib/stomp.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 
 <script th:inline="javascript">
-    const TABLE_ID = /*[[${tableId}]]*/ null;
-    // const orderId = /*[[${orderId}]]*/ null;
+    const tableId = /*[[${tableId}]]*/ null;
 
-    window.addEventListener("load", () => {
+    window.addEventListener("DOMContentLoaded", () => {
         const socket = new SockJS('/ws');
         const stomp = Stomp.over(socket);
         stomp.debug = null;
@@ -36,9 +35,6 @@
         stomp.connect({}, () => {
             stomp.subscribe(`/topic/tables/${tableId}/payment`, (frame) => {
                 const evt = JSON.parse(frame.body);
-
-                // // 해당 주문만 반응
-                // if (orderId != null && evt?.orderId != null && Number(orderId) !== Number(evt.orderId)) return;
 
                 if (evt?.type === "REDIRECT" && evt?.url) {
                     window.location.replace(evt.url);

@@ -14,7 +14,8 @@
 <div th:replace="~{fragments/nav :: nav(${navTitle}, ${navBack}, ${tableNum})}"></div>
 
 <!-- 빈 장바구니 -->
-<div th:if="${#lists.isEmpty(cartItems)}" class="cart-section">
+<div id="empty-cart" class="cart-section"
+     th:classappend="${#lists.isEmpty(cartItems)} ? '' : 'hidden'">
     <div class="inline-action">
         <p class="cart-notice">장바구니가 비었습니다.</p>
         <a th:href="@{/items}" id="menu-btn" class="outline-button inline-button">메뉴 보기</a>
@@ -34,11 +35,11 @@
 </div>
 
 <!-- 장바구니 리스트 -->
-<div th:if="${!#lists.isEmpty(cartItems)}" class="cart-section">
-    <!-- 안내 문구 -->
+<div id="non-empty-cart" class="cart-section"
+     th:classappend="${#lists.isEmpty(cartItems)} ? 'hidden' : ''">
     <h3 class="total-qty">
         선택한 메뉴
-        <span th:text="${summary.totalQuantity}">0</span>개
+        <span id="total-qty" th:text="${summary.totalQuantity}">0</span>개
     </h3>
 
     <div th:each="ci, stat : ${cartItems}">
@@ -66,12 +67,14 @@
 
             <div class="cart-item qty-control">
                 <button type="button" class="qty-btn minus" th:attr="data-itemid=${ci.item.id}">
-                    <i class="fa-regular fa-trash-can fa-2xs"></i>
-                    <span class="minus-text" style="display: none">
-                        <i class="fa-solid fa-minus fa-2xs"></i>
-                    </span>
-                </button>
+                    <!-- qty == 1 일 때: 휴지통 -->
+                    <i class="fa-regular fa-trash-can fa-2xs"
+                       th:classappend="${ci.quantity > 1} ? 'hidden' : ''"></i>
 
+                    <!-- qty >= 2 일 때: 마이너스 -->
+                    <i class="fa-solid fa-minus fa-2xs"
+                       th:classappend="${ci.quantity <= 1} ? 'hidden' : ''"></i>
+                </button>
                 <span class="qty" th:attr="data-itemid=${ci.item.id}" th:text="${ci.quantity}">1</span>
 
                 <button type="button" class="qty-btn plus" th:attr="data-itemid=${ci.item.id}">
@@ -85,350 +88,356 @@
     </div>
 </div>
 
-<div th:if="${!#lists.isEmpty(cartItems)}" class="section-divider"></div>
+<div id="section-divider" class="section-divider"
+     th:if="${!#lists.isEmpty(cartItems)}"></div>
 <div id="toast" class="toast"></div>
 
 <!-- 주문하기 버튼 -->
-<div th:if="${!#lists.isEmpty(cartItems)}" class="bottom-bar">
+<div id="bottom-bar" th:if="${!#lists.isEmpty(cartItems)}" class="bottom-bar">
     <a th:href="@{/orders/create}" id="order" class="bottom-button">
-        총 <span th:text="${#numbers.formatInteger(summary.totalAmount, 0, 'COMMA')}">0</span>원
+        총 <span id="total-amount"
+                th:text="${#numbers.formatInteger(summary.totalAmount, 0, 'COMMA')}">0</span>원
         주문하기
     </a>
 </div>
 
-<script th:src="@{/js/toast.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 
-<script>
-    // === 변수 ===
+
+<script th:src="@{/js/toast.js}"></script>
+<script th:inline="javascript">
+
+    // ==== State / Config ====
     const tableId = /*[[${tableId}]]*/ null;
+
+    const WS = {
+        url: '/ws',
+        topics: {
+            nav:  (tableId) => `/topic/tables/${tableId}/nav`,
+            cart: (tableId) => `/topic/tables/${tableId}/cart`,
+        },
+    };
+
     let navStomp = null;
     let cartStomp = null;
 
-    // 연타 방지용
-    const pending = new Set(); // itemId 문자열
+    // 연타 방지용 (itemId 문자열)
+    const pending = new Set();
 
+    // 중복 reload 방지
+    let reloading = false;
 
-    // === init ===
-    window.addEventListener("load", () => {
-        connectNavTopic();
-        connectCartTopic();
-    });
+    // ==== Utils ====
+    const safeJson = (str) => {
+        try { return JSON.parse(str); } catch { return null; }
+    };
 
-    window.addEventListener("beforeunload", () => {
-        try { navStomp?.disconnect(); } catch (e) {}
-        try { cartStomp?.disconnect(); } catch (e) {}
-    });
+    const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+    };
 
-    // === WebSocket: nav ===
-    function connectNavTopic() {
-        if (!tableId) return;
+    const formatComma = (n) => Number(n ?? 0).toLocaleString('ko-KR');
 
-        const socket = new SockJS('/ws');
-        navStomp = Stomp.over(socket);
-        navStomp.debug = null;
+    // selector escape (간단 버전)
+    const cssEscape = (v) => String(v).replaceAll('"', '\\"');
 
+    const hasTable = () => !!tableId;
+
+    const disconnectQuietly = (client) => {
+        try { client?.disconnect(); } catch (e) {}
+    };
+
+    const scheduleReload = () => {
+        if (reloading) return;
+        reloading = true;
+        window.location.reload();
+    };
+
+    // ==== WebSocket ====
+    const createStompClient = () => {
+        const socket = new SockJS(WS.url);
+        const client = Stomp.over(socket);
+        client.debug = null;
+        return client;
+    };
+
+    const connectNavTopic = () => {
+        if (!hasTable()) return;
+
+        navStomp = createStompClient();
         navStomp.connect({}, () => {
-            navStomp.subscribe(`/topic/tables/${tableId}/nav`, (frame) => {
-                const evt = safeJson(frame.body);
-                if (!evt) return;
-
-                if (evt?.type === "REDIRECT" && evt.data?.url) {
-                    window.location.replace(evt.data.url);
-                    return;
-                }
-                if (evt?.type === "INFO" && evt.data?.message) {
-                    showToast(evt.data.message);
-                }
-            });
+            navStomp.subscribe(WS.topics.nav(tableId), onNavMessage);
         });
-    }
+    };
 
-    // === WebSocket: Cart 부분 갱신 ===
-    function connectCartTopic() {
-        if (!tableId) return;
+    const onNavMessage = (frame) => {
+        const evt = safeJson(frame.body);
+        if (!evt) return;
 
-        const socket = new SockJS('/ws');
-        cartStomp = Stomp.over(socket);
-        cartStomp.debug = null;
+        if (evt.type === 'REDIRECT' && evt.data?.url) {
+            window.location.replace(evt.data.url);
+            return;
+        }
 
+        if (evt.type === 'INFO' && evt.data?.message) {
+            showToast(evt.data.message);
+        }
+    };
+
+    const connectCartTopic = () => {
+        if (!hasTable()) return;
+
+        cartStomp = createStompClient();
         cartStomp.connect({}, () => {
-            cartStomp.subscribe(`/topic/tables/${tableId}/cart`, (frame) => {
-                const evt = safeJson(frame.body);
-                if (!evt || evt.type !== "CART_UPDATED") return;
-
-                // evt.data = { summary, items }
-                applyCartSync(evt.data);
-
-                // pending 해제(WS가 최종 반영)
-                pending.clear();
-            });
+            cartStomp.subscribe(WS.topics.cart(tableId), onCartMessage);
         });
+    };
+
+    const onCartMessage = (frame) => {
+        const evt = safeJson(frame.body);
+        if (!evt || evt.type !== 'CART_UPDATED') return;
+
+        // evt.data = { summary, items }
+        applyCartSync(evt.data);
+
+        // WS가 최종 반영(낙관적 UI 종료)
+        pending.clear();
+    };
+
+    // ==== UI ====
+    function showEmptyCartUI() {
+        const empty = document.getElementById('empty-cart');
+        const nonEmpty = document.getElementById('non-empty-cart');
+
+        if (empty) empty.classList.remove('hidden');
+        if (nonEmpty) nonEmpty.classList.add('hidden');
+
+        removeBottomBar();
     }
 
+    function showNonEmptyCartUI() {
+        const empty = document.getElementById('empty-cart');
+        const nonEmpty = document.getElementById('non-empty-cart');
 
-    // window.addEventListener("load", () => {
-    //     const socket = new SockJS('/ws');
-    //     const stomp = Stomp.over(socket);
-    //     stomp.debug = null;
-    //
-    //     stomp.connect({}, () => {
-    //         stomp.subscribe(`/topic/tables/${tableId}/nav`, (frame) => {
-    //             const evt = JSON.parse(frame.body);
-    //
-    //             if (evt?.type === "REDIRECT" && evt.data?.url) {
-    //                 // 주문 시작 시, 같은 테이블 사람들은 /items로 강제 이동
-    //                 window.location.replace(evt.data.url);
-    //                 return;
-    //             }
-    //             if (evt?.type === "INFO" && evt.data?.message) {
-    //                 showToast(evt.data.message);
-    //             }
-    //         });
-    //     });
-    // });
+        if (empty) empty.classList.add('hidden');
+        if (nonEmpty) nonEmpty.classList.remove('hidden');
+    }
 
-    // === Click 핸들러 (+/-) ===
-    document.addEventListener("click", async (e) => {
-        const plusBtn = e.target.closest(".qty-btn.plus");
-        const minusBtn = e.target.closest(".qty-btn.minus");
+    const removeBottomBar = () => {
+        const bottomBar = document.getElementById('bottom-bar');
+        const divider = document.getElementById('section-divider')
+        if (bottomBar) bottomBar.remove();
+        if (divider) divider.remove();
+    };
+
+    const toggleMinusIcon = (itemId, qty) => {
+        const row = document.querySelector(`.cart-items.list-box[data-itemid="${cssEscape(itemId)}"]`);
+        if (!row) return;
+
+        const trash = row.querySelector('.fa-trash-can');
+        const minus = row.querySelector('.fa-minus');
+
+        if (!trash || !minus) return;
+
+        if (qty <= 1) {
+            trash.classList.remove('hidden');
+            minus.classList.add('hidden');
+        } else {
+            trash.classList.add('hidden');
+            minus.classList.remove('hidden');
+        }
+    };
+
+    const updateSummaryFromDom = () => {
+        const rows = document.querySelectorAll('.cart-items.list-box[data-itemid]');
+        let totalQty = 0;
+        let totalAmount = 0;
+
+        rows.forEach((row) => {
+            const price = Number(row.getAttribute('data-price') || '0');
+            const qtyEl = row.querySelector('.qty');
+            const qty = Number(qtyEl?.textContent || '0');
+
+            totalQty += qty;
+            totalAmount += price * qty;
+        });
+
+        setText('total-qty', String(totalQty));
+        setText('total-amount', formatComma(totalAmount));
+    };
+
+    const removeCartRowFromDom = (itemId) => {
+        const row = document.querySelector(`.cart-items.list-box[data-itemid="${cssEscape(itemId)}"]`);
+        if (!row) return;
+
+        // row 다음에 divider가 있으면 같이 제거 (마지막이 아니었던 경우)
+        const next = row.nextElementSibling;
+        if (next && next.classList.contains('menu-divider')) {
+            next.remove();
+        } else {
+            // 마지막 row를 지운 경우, 이전 divider(바로 앞) 제거
+            const prev = row.previousElementSibling;
+            if (prev && prev.classList.contains('menu-divider')) {
+                prev.remove();
+            }
+        }
+
+        row.remove();
+    };
+
+
+
+    // ==== API ====
+    const updateQty = async (itemId, qty) => {
+        const res = await fetch(`/cart/update?itemId=${encodeURIComponent(itemId)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ qty }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+    };
+
+    const deleteItem = async (itemId) => {
+        const res = await fetch(`/cart/delete?itemId=${encodeURIComponent(itemId)}`, {
+            method: 'DELETE',
+        });
+        if (!res.ok) throw new Error(await res.text());
+    };
+
+    /* =========================================================
+     *  Cart sync (WS payload -> DOM patch)
+     *   - 수량 변경: 부분 갱신
+     *   - 새 아이템 추가 / 삭제: reload
+     * ========================================================= */
+    const applyCartSync = (sync) => {
+        const summary = sync?.summary || { totalQuantity: 0, totalAmount: 0 };
+        const items = Array.isArray(sync?.items) ? sync.items : [];
+
+        // 1) 요약 갱신
+        setText('total-qty', String(summary.totalQuantity ?? 0));
+        setText('total-amount', formatComma(summary.totalAmount ?? 0));
+
+        // 2) empty/non-empty 토글
+        const totalQty = summary.totalQuantity ?? 0;
+        if (totalQty <= 0 || items.length === 0) {
+            showEmptyCartUI();
+            return;
+        }
+        showNonEmptyCartUI();
+
+        // 3) 추가/삭제 감지 -> reload
+        const domIds = new Set(
+            Array.from(document.querySelectorAll('.cart-items.list-box[data-itemid]'))
+                .map((el) => String(el.getAttribute('data-itemid')))
+        );
+        const incomingIds = new Set(items.map((line) => String(line.itemId)));
+
+        if (domIds.size !== incomingIds.size) {
+            scheduleReload();
+            return;
+        }
+        for (const id of incomingIds) {
+            if (!domIds.has(id)) {
+                scheduleReload();
+                return;
+            }
+        }
+
+        // 4) 수량만 부분 갱신
+        const incomingMap = new Map(items.map((line) => [String(line.itemId), line]));
+        document.querySelectorAll('.cart-items.list-box[data-itemid]').forEach((row) => {
+            const id = String(row.getAttribute('data-itemid'));
+            const line = incomingMap.get(id);
+            if (!line) return; // (여기 오면 사실상 reload 대상인데 위에서 걸러짐)
+
+            const qtySpan = row.querySelector(`.qty[data-itemid="${cssEscape(id)}"]`);
+            if (qtySpan) qtySpan.textContent = String(line.quantity);
+            toggleMinusIcon(id, Number(line.quantity));
+        });
+    };
+
+    // ==== Click handler (+/-) ====
+    const handleQtyClick = async (e) => {
+        const plusBtn  = e.target.closest('.qty-btn.plus');
+        const minusBtn = e.target.closest('.qty-btn.minus');
         if (!plusBtn && !minusBtn) return;
 
-        const itemId = (plusBtn || minusBtn).getAttribute("data-itemid");
+        const btn = plusBtn || minusBtn;
+        const itemId = btn.getAttribute('data-itemid');
         if (!itemId) return;
 
         // 연타 방지
-        if (pending.has(itemId)) return; // 해당 itemId 처리 중이면 무시
+        if (pending.has(itemId)) return;
         pending.add(itemId);
 
-        const qtySpan = document.querySelector(`.qty[data-itemid="${itemId}"]`);
-        const current = Number(qtySpan?.textContent || "0");
+        const qtySpan = document.querySelector(`.qty[data-itemid="${cssEscape(itemId)}"]`);
+        const current = Number(qtySpan?.textContent || '0');
 
         try {
             if (plusBtn) {
                 const next = current + 1;
+
                 if (qtySpan) qtySpan.textContent = String(next);
+                toggleMinusIcon(itemId, next);
+                updateSummaryFromDom();
 
                 await updateQty(itemId, next);
-                showToast("수량이 변경되었습니다.");
-            } else {
-                if (current <= 1) {
-                    removeRow(itemId);
-                    await deleteItem(itemId);
-                    showToast("아이템이 삭제되었습니다.");
-                } else {
-                    const next = current - 1;
-                    if (qtySpan) qtySpan.textContent = String(next);
-
-                    await updateQty(itemId, next);
-                    showToast("수량이 변경되었습니다.");
-                }
-            }
-        } catch (err) {
-            showToast(err?.message || "처리 중 오류가 발생했습니다.");
-            pending.delete(itemId);
-        }
-
-        pending.delete(itemId);
-
-        // !! 마지막 아이템 삭제 후 빈 장바구니 뷰로 전환
-        const remain = document.querySelectorAll(".cart-items.list-box").length;
-        if (remain === 0) {
-            window.location.reload();
-        }
-    });
-
-    async function updateQty(itemId, qty) {
-        const res = await fetch(`/cart/update?itemId=${encodeURIComponent(itemId)}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ qty }),
-        });
-        if (!res.ok) throw new Error(await res.text());
-    }
-
-    async function deleteItem(itemId) {
-        const res = await fetch(`/cart/delete?itemId=${encodeURIComponent(itemId)}`, {
-            method: "DELETE",
-        });
-        if (!res.ok) throw new Error(await res.text());
-    }
-
-    // ============================================
-    // Apply cart sync (WS payload -> DOM patch)
-    // payload: { summary: {totalQuantity,totalAmount}, items: [{itemId,name,unitPrice,quantity,lineAmount}, ...] }
-    // ============================================
-    function applyCartSync(sync) {
-        const summary = sync?.summary || { totalQuantity: 0, totalAmount: 0 };
-        const items = Array.isArray(sync?.items) ? sync.items : [];
-
-        // 1) 상단 총 수량
-        setText("total-qty", String(summary.totalQuantity ?? 0));
-
-        // 2) 주문하기 총액
-        setText("total-amount", formatComma(summary.totalAmount ?? 0));
-
-        // 3) empty/non-empty UI 토글
-        if ((summary.totalQuantity ?? 0) <= 0 || items.length === 0) {
-            showEmptyCartUI();
-            return;
-        } else {
-            showNonEmptyCartUI();
-        }
-
-        // 4) itemId -> line 매핑
-        const incoming = new Map();
-        items.forEach(line => incoming.set(String(line.itemId), line));
-
-        // 5) 기존 DOM row 업데이트/삭제
-        document.querySelectorAll(".cart-items.list-box[data-itemid]").forEach(row => {
-            const id = row.getAttribute("data-itemid");
-            const line = incoming.get(String(id));
-            if (!line) {
-                // 서버 스냅샷에 없으면 삭제된 아이템
-                removeRow(id);
+                showToast('수량이 변경되었습니다.');
                 return;
             }
 
-            // 수량 갱신
-            const qtySpan = row.querySelector(`.qty[data-itemid="${cssEscape(id)}"]`);
-            if (qtySpan) qtySpan.textContent = String(line.quantity);
+            // minus
+            if (current <= 1) {
+                // 삭제
+                await deleteItem(itemId);
 
-            // (선택) minus 아이콘 표시 정책이 있다면 여기서 조절 가능
-            // 예: quantity>1이면 trash 대신 minus 보이기 등
-        });
+                removeCartRowFromDom(itemId);   // DOM 해당 아이템 줄 제거
+                updateSummaryFromDom();         // 장바구니 요약 정보 갱신
 
-        // 6) 새 아이템 DOM에 없으면 추가 (최소 마크업)
-        // ⚠️ 너희 기존 마크업이 더 복잡하면 여기만 너희 스타일대로 살짝 다듬으면 됨.
-        const list = document.getElementById("cart-list");
-        items.forEach(line => {
-            const exists = document.querySelector(`.cart-items.list-box[data-itemid="${cssEscape(line.itemId)}"]`);
-            if (exists) return;
-            if (!list) return;
+                // 마지막 장바구니 아이템이었다면 빈 장바구니 UI
+                const totalQty = Number(document.getElementById('total-qty')?.textContent || '0');
+                if (totalQty <= 0) {
+                    showEmptyCartUI();
+                } else {
+                    showNonEmptyCartUI();
+                }
 
-            list.appendChild(buildCartRow(line));
-            // divider도 같이 붙여주기(항상 넣고, 필요 시 CSS로 처리)
-            const div = document.createElement("div");
-            div.className = "menu-divider";
-            list.appendChild(div);
-        });
+                showToast('아이템이 삭제되었습니다.');
+                return;
+            }
 
-        // 7) divider 정리(마지막 divider 제거)
-        normalizeDividers();
-    }
+            const next = current - 1;
 
-    function buildCartRow(line) {
-        const wrapper = document.createElement("div");
+            // 낙관적 UI
+            if (qtySpan) qtySpan.textContent = String(next);
+            toggleMinusIcon(itemId, next);
+            updateSummaryFromDom();
 
-        wrapper.innerHTML = `
-          <div class="cart-items list-box"
-               data-itemid="${escapeAttr(line.itemId)}"
-               data-name="${escapeAttr(line.name)}"
-               data-price="${escapeAttr(line.unitPrice)}">
-            <div class="menu-info">
-              <h4>${escapeHtml(line.name)}</h4>
-              <p class="price"><span>${formatComma(line.unitPrice)}</span>원</p>
-            </div>
-
-            <div class="cart-item qty-control">
-              <button type="button" class="qty-btn minus" data-itemid="${escapeAttr(line.itemId)}">
-                <i class="fa-regular fa-trash-can fa-2xs"></i>
-                <span class="minus-text" style="display: none">
-                  <i class="fa-solid fa-minus fa-2xs"></i>
-                </span>
-              </button>
-
-              <span class="qty" data-itemid="${escapeAttr(line.itemId)}">${escapeHtml(line.quantity)}</span>
-
-              <button type="button" class="qty-btn plus" data-itemid="${escapeAttr(line.itemId)}">
-                <i class="fa-solid fa-plus fa-2xs"></i>
-              </button>
-            </div>
-          </div>
-        `;
-
-        // wrapper의 첫 번째 자식(div.cart-items)을 반환
-        return wrapper.firstElementChild;
-    }
-
-    function removeRow(itemId) {
-        const row = document.querySelector(`.cart-items[data-itemid="${itemId}"]`);
-        if (!row) return;
-
-        // divider까지 함께 제거: row 다음 형제에 menu-divider가 있으면 제거
-        const next = row.nextElementSibling;
-        row.remove();
-        if (next && next.classList && next.classList.contains("menu-divider")) {
-            next.remove();
+            await updateQty(itemId, next);
+            showToast('수량이 변경되었습니다.');
+        } catch (err) {
+            showToast(err?.message || '처리 중 오류가 발생했습니다.');
+        } finally {
+            pending.delete(itemId);
         }
+    };
 
-        // 혹시 마지막에 divider만 남는 문제 방지
-        normalizeDividers();
+    // ==== Entry / Bindings ====
+    window.addEventListener('load', () => {
+        connectNavTopic();
+        connectCartTopic();
+    });
 
-        // 남은 아이템이 없으면 empty UI로 전환(요약은 WS에서 다시 오겠지만 UX상 즉시)
-        const remain = document.querySelectorAll(".cart-items.list-box").length;
-        if (remain === 0) showEmptyCartUI();
-    }
+    document.addEventListener('click', handleQtyClick);
 
-
-    function normalizeDividers() {
-        const list = document.getElementById("cart-list");
-        if (!list) return;
-
-        const dividers = list.querySelectorAll(".menu-divider");
-        if (dividers.length === 0) return;
-
-        // 마지막 divider 제거
-        dividers.forEach(d => d.classList.remove("last-divider"));
-        const last = dividers[dividers.length - 1];
-        // “마지막 요소가 divider면” 마지막 divider 제거
-        if (last && (!last.nextElementSibling)) {
-            last.remove();
-        }
-    }
-
-    function setText(id, value) {
-        const el = document.getElementById(id);
-        if (el) el.textContent = value;
-    }
-
-    function safeJson(str) {
-        try { return JSON.parse(str); } catch (e) { return null; }
-    }
-
-    function formatComma(n) {
-        return Number(n ?? 0).toLocaleString("ko-KR");
-    }
-
-    // CSS selector escape
-    function cssEscape(v) {
-        // 간단 버전(숫자라면 그대로 OK)
-        return String(v).replaceAll('"', '\\"');
-    }
-
-    // HTML escape (최소)
-    function escapeHtml(s) {
-        return String(s ?? "")
-            .replaceAll("&","&amp;")
-            .replaceAll("<","&lt;")
-            .replaceAll(">","&gt;")
-            .replaceAll('"',"&quot;")
-            .replaceAll("'","&#039;");
-    }
-
-    function escapeAttr(s) {
-        return escapeHtml(s);
-    }
-
-    // (에러 복구용) 서버에서 최신 스냅샷 다시 받아 적용
-    // - 너희가 /cart/sync 같은 API를 만들면 더 좋고,
-    // - 당장은 /cart/summary만 있으면 완벽 복구는 어렵지만 최소한 요약은 맞출 수 있음
-    async function refreshCartSnapshotFromServer() {
-        // 완벽 동기화가 필요하면 /cart/sync 같은 엔드포인트를 추가하는 걸 추천
-        // 지금은 "WS가 곧 올 것"을 기대하고, 최소로는 페이지를 reload하지 않고 그냥 두거나
-        // 필요 시만 reload해도 됨.
-        // 여기서는 안전하게 location.reload() 대신 "그냥 기다리기"로 처리.
-        // (원하면 /cart/sync API까지 같이 만들어줄게)
-    }
+    window.addEventListener('beforeunload', () => {
+        disconnectQuietly(navStomp);
+        disconnectQuietly(cartStomp);
+    });
 </script>
+
+
 </body>
 </html>

@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title th:text="${pageTitle}">관리자 페이지</title>
 
-    <link rel="stylesheet" th:href="@{/css/admin.css}" />
+    <link rel="stylesheet" th:href="@{/css/admin.css}"/>
 
     <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
 </head>
@@ -51,7 +51,7 @@
 
             <div class="order-header">
                 <div>
-                    <span class="table-badge" th:text="'테이블 ' + ${order.table.tableNum}">테이블 1</span>
+                    <span class="table-num" th:text="'테이블 ' + ${order.table.tableNum}">테이블 1</span>
                     <span class="status-badge"
                           th:classappend="${order.status.name() == 'PAYMENT_PENDING'} ? 'status-pending' : 'status-waiting'"
                           th:text="${order.status.name() == 'PAYMENT_PENDING'} ? '입금 중' : '입금 확인 대기'">
@@ -77,18 +77,23 @@
 
             <!-- 입금 확인 / 주문 취소: 각각 별도 폼 (PRG) -->
             <div class="order-actions">
-                <form th:action="@{/admin/orders/{orderId}/confirm(orderId=${order.id})}" method="post" style="display: inline;">
-                    <button type="submit" class="btn btn-confirm"
-                            onclick="return confirm('입금을 확인하시겠습니까?')">
-                        입금 확인
-                    </button>
-                </form>
-                <form th:action="@{/admin/orders/{orderId}/cancel(orderId=${order.id})}" method="post" style="display: inline;">
+                <form th:action="@{/admin/orders/{orderId}/cancel(orderId=${order.id})}" method="post"
+                      style="display: inline;">
                     <button type="submit" class="btn btn-cancel"
+                            th:disabled="${order.status.name() == 'PAYMENT_PENDING'}"
                             onclick="return confirm('주문을 취소하시겠습니까?')">
                         주문 취소
                     </button>
                 </form>
+                <form th:action="@{/admin/orders/{orderId}/confirm(orderId=${order.id})}" method="post"
+                      style="display: inline;">
+                    <button type="submit" class="btn btn-confirm"
+                            th:disabled="${order.status.name() == 'PAYMENT_PENDING'}"
+                            onclick="return confirm('입금을 확인하시겠습니까?')">
+                        입금 확인
+                    </button>
+                </form>
+
             </div>
         </div>
     </div>
@@ -101,14 +106,15 @@
         </div>
 
         <div th:each="order : ${serveOrders}" class="order-card" th:attr="data-order-id=${order.id}">
+
             <div class="order-header">
                 <span class="table-num" th:text="'테이블 ' + ${order.table.tableNum}">테이블 1</span>
-                <span class="time" th:text="${#temporals.format(order.createdAt, 'HH:mm:ss')}">12:34:56</span>
+                <span class="timestamp" th:text="${#temporals.format(order.createdAt, 'HH:mm:ss')}">12:34:56</span>
             </div>
 
             <ul class="order-items">
                 <li th:each="oi : ${order.orderItems}">
-                    <label>
+                    <label class="serve-item">
                         <input type="checkbox"
                                class="serve-checkbox"
                                th:checked="false"
@@ -116,8 +122,8 @@
                                th:attr="data-order-id=${order.id}, data-order-item-id=${oi.id}"
                                onchange="onServeCheckChanged(this)"/>
                         <span class="item-text">
-                            <span th:text="${oi.item.name}">메뉴명</span>
-                            <span th:text="' x' + ${oi.quantity}">x1</span>
+                            <span class="item-name" th:text="${oi.item.name}">아이템명</span>
+                            <span class="item-qty" th:text="${oi.quantity} + '개'">1개</span>
                         </span>
                     </label>
                 </li>
@@ -125,7 +131,7 @@
 
             <!-- 서빙 완료: 모든 체크박스가 다 활성화 될 때 버튼 활성화 -->
             <div class="serve-order-footer">
-                <form th:action="@{/admin/orders/{orderId}/complete-serving(orderId=${order.id})}" method="post">
+                <form th:action="@{/admin/orders/{orderId}/complete(orderId=${order.id})}" method="post">
                     <button type="submit" class="btn-serve-complete"
                             th:attr="data-order-id=${order.id}"
                             disabled
@@ -147,108 +153,202 @@
 <script th:src="@{/js/toast.js}"></script>
 <!-- 공통 스크립트 끝 -->
 
-<script>
+<script th:inline="javascript">
+    /* =========================================================
+     *  State / Config
+     * ========================================================= */
     const activeTab = /*[[${activeTab}]]*/ 'confirm';
 
-    const socket = new SockJS('/ws');
-    const stompClient = Stomp.over(socket);
-    stompClient.debug = null;
+    const WS = {
+        url: '/ws',
+        retryMs: 3000,
+        topics: {
+            hallReload: '/topic/admin/orders/hall',
+            hallServeReload: '/topic/admin/orders/hall/serve',
+            orderProgress: (orderItemId) => `/topic/orders/${orderItemId}/progress`,
+        },
+    };
 
-    stompClient.connect({}, function() {
+    let sock = null;
+    let stompClient = null;
 
-        // 1. 입금 확인 탭: /topic/admin/orders/hall 에서 RELOAD 오면 reload
-        if (activeTab === 'confirm') {
-            stompClient.subscribe('/topic/admin/orders/hall', function(message) {
-                const evt = safeJson(message.body);
-                if (evt && evt.type === 'RELOAD') {
-                    window.location.reload();
-                }
-            });
+    // progress 중복 구독 방지 (orderItemId 기준)
+    const subscribedProgress = new Set();
+
+    /* =========================================================
+     *  Utils
+     * ========================================================= */
+    const safeJson = (str) => {
+        try { return JSON.parse(str); } catch { return null; }
+    };
+
+    const isConfirmTab = () => activeTab === 'confirm';
+    const isServeTab   = () => activeTab === 'serve';
+
+    const disconnectQuietly = () => {
+        try { stompClient?.disconnect(); } catch (e) {}
+    };
+
+    /* =========================================================
+     *  WebSocket
+     * ========================================================= */
+    const connectWs = () => {
+        sock = new SockJS(WS.url);
+        stompClient = Stomp.over(sock);
+        stompClient.debug = null;
+
+        // stompjs 2.3.3 환경에서 동작 가능
+        stompClient.reconnect_delay = WS.retryMs;
+
+        stompClient.connect({}, onWsConnected, onWsError);
+
+        // SockJS 레벨 close도 잡아서 강제 재연결
+        sock.onclose = () => {
+            console.warn('[WS] closed. retry in 3s');
+            setTimeout(connectWs, WS.retryMs);
+        };
+    };
+
+    const onWsConnected = () => {
+        console.log('[WS] connected');
+
+        subscribeReloadTopics();
+
+        if (isServeTab()) {
+            try {
+                subscribeServeProgressTopics();
+            } catch (e) {
+                console.error('[WS] subscribeServeProgressTopics failed', e);
+            }
         }
+    };
 
-        // 2. 서빙 탭: /topic/admin/orders/serve 에서 RELOAD 오면 reload
-        if (activeTab === 'serve') {
-            stompClient.subscribe('/topic/admin/orders/serve', function(message) {
-                const evt = safeJson(message.body);
-                if (evt && evt.type === 'RELOAD') {
-                    window.location.reload();
-                }
+    const onWsError = (err) => {
+        console.warn('[WS] connect error', err);
+    };
+
+    const subscribeReloadTopics = () => {
+        const onReload = (message) => {
+            const evt = safeJson(message.body);
+            if (evt?.type === 'RELOAD') window.location.reload();
+        };
+
+        stompClient.subscribe(WS.topics.hallReload, onReload);
+        stompClient.subscribe(WS.topics.hallServeReload, onReload);
+    };
+
+    /**
+     * 주방에서 특정 주문아이템의 체크박스 클릭 시
+     */
+    const subscribeServeProgressTopics = () => {
+        document
+            .querySelectorAll('#serve-list input.serve-checkbox[data-order-item-id]')
+            .forEach((cb) => {
+                const orderItemId = cb.getAttribute('data-order-item-id');
+                if (!orderItemId) return;
+
+                if (subscribedProgress.has(orderItemId)) return;
+                subscribedProgress.add(orderItemId);
+
+                stompClient.subscribe(WS.topics.orderProgress(orderItemId), (message) => {
+                    const evt = safeJson(message.body);
+                    if (!evt) return;
+
+                    // evt: { orderId, orderItemId, checked }
+                    updateOrderItemCooked(evt.orderId, evt.orderItemId, evt.checked);
+                });
             });
+    };
 
-            // 3. 서빙 탭: 주문별 progress 구독 (주방 체크 → 서빙 체크/활성화 반영)
-            //     WebSocketService.orderItemProgress: { orderId, orderItemId, checked }
-            subscribeServeProgressTopics();
-        }
-    });
+    /* =========================================================
+     *  UI: Confirm tab
+     * ========================================================= */
+    const updateConfirmButtons = () => {
+        if (!isConfirmTab()) return;
 
-    // 서빙 탭: progress 구독
-    function subscribeServeProgressTopics() {
-        const orderCards = document.querySelectorAll('.order-card[data-order-id]');
-        orderCards.forEach(function(card) {
-            const orderId = card.getAttribute('data-order-id');
-            if (!orderId) return;
+        document
+            .querySelectorAll('#paid-list .order-card[data-order-id]')
+            .forEach((card) => {
+                const isWaiting = card.classList.contains('waiting');
 
-            stompClient.subscribe('/topic/orders/' + orderId + '/progress', function(message) {
-                const evt = safeJson(message.body);
-                if (!evt) return;
+                const confirmBtn = card.querySelector('button.btn.btn-confirm');
+                const cancelBtn  = card.querySelector('button.btn.btn-cancel');
 
-                // evt: { orderId, orderItemId, checked }
-                updateOrderItemCooked(evt.orderId, evt.orderItemId, evt.checked);
+                if (confirmBtn) confirmBtn.disabled = !isWaiting;
+                if (cancelBtn)  cancelBtn.disabled  = !isWaiting;
             });
-        });
-    }
+    };
 
-    function updateOrderItemCooked(orderId, orderItemId, cooked) {
-        const orderCard = document.querySelector('[data-order-id="' + orderId + '"]');
+    /* =========================================================
+     *  UI: Serve tab
+     * ========================================================= */
+    const updateServeCompleteButtons = () => {
+        if (!isServeTab()) return;
+        document.querySelectorAll('#serve-list .order-card').forEach(updateCompleteButton);
+    };
+
+    const onServeCheckChanged = (checkbox) => {
+        const card = checkbox?.closest('.order-card');
+        if (card) updateCompleteButton(card);
+    };
+
+    const updateOrderItemCooked = (orderId, orderItemId, cooked) => {
+        const orderCard = document.querySelector(`.order-card[data-order-id="${orderId}"]`);
         if (!orderCard) return;
 
         const checkbox = orderCard.querySelector(
-            'input.serve-checkbox[data-order-id="' + orderId + '"][data-order-item-id="' + orderItemId + '"]'
+            `input.serve-checkbox[data-order-id="${orderId}"][data-order-item-id="${orderItemId}"]`
         );
         if (!checkbox) return;
 
-        // 조리 완료된 아이템이면(cooked=true) 활성화, 조리 안 된 아이템이면(cooked=false) 비활성화(그리고 체크 해제)
+        // 조리 완료(cooked=true)면 활성화, 아니면 비활성화 + 체크 해제
         checkbox.disabled = !cooked;
         if (!cooked) checkbox.checked = false;
 
-        // 간단한 하이라이트(선택)
+        // 간단 하이라이트(선택)
         const label = checkbox.closest('label');
-        if (label) {
+        if (label && !cooked) {
             label.style.transition = 'background 0.3s';
-            label.style.background = cooked ? '#d4edda' : '#f8d7da';
-            setTimeout(function() { label.style.background = ''; }, 700);
+            label.style.background = '#f8d7da';
+            setTimeout(() => { label.style.background = ''; }, 700);
         }
 
         updateCompleteButton(orderCard);
-    }
+    };
 
-    // 서빙 탭 버튼 활성화 규칙
-    window.addEventListener('load', function() {
-        if (activeTab !== 'serve') return;
-        document.querySelectorAll('.order-card').forEach(function(card) {
-            updateCompleteButton(card);
-        });
-    });
-
-    function onServeCheckChanged(checkbox) {
-        updateCompleteButton(checkbox.closest('.order-card'));
-    }
-
-    // 서빙 완료 버튼: 모든 체크박스가 활성화되면 활성화
-    function updateCompleteButton(orderCard) {
-        const btn = orderCard ? orderCard.querySelector('.btn-serve-complete') : null;
+    const updateCompleteButton = (orderCard) => {
+        const btn = orderCard?.querySelector('.btn-serve-complete');
         if (!btn) return;
 
         const checkboxes = orderCard.querySelectorAll('.serve-checkbox');
         if (checkboxes.length === 0) {
             btn.disabled = true;
+            orderCard.classList.remove('ready');
             return;
         }
-        const allEnabled = Array.from(checkboxes).every(function(cb) { return !cb.disabled; });
 
+        const allEnabled = Array.from(checkboxes).every((cb) => !cb.disabled);
         btn.disabled = !allEnabled;
-    }
+        orderCard.classList.toggle('ready', allEnabled);
+    };
 
+    /* =========================================================
+     *  Entry / Bindings
+     * ========================================================= */
+    document.addEventListener('DOMContentLoaded', () => {
+        // 초기 렌더 상태 반영 (중복 호출 줄이기)
+        updateConfirmButtons();
+        updateServeCompleteButtons();
+    });
+
+    window.addEventListener('load', () => {
+        connectWs();
+    });
+
+    window.addEventListener('beforeunload', disconnectQuietly);
+
+    window.onServeCheckChanged = onServeCheckChanged;
 </script>
+
 </body>
 </html>
