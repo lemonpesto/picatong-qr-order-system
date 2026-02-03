@@ -34,15 +34,15 @@
 
     <!-- 수정 폼 -->
     <form class="admin-form" th:action="@{/admin/items/{id}(id=${item.id})}" method="post">
-        <label class="admin-form__label" for="name">아이템 이름 *</label>
+        <label class="admin-form__label" for="name">아이템 이름 <span class="essential-input">*</span></label>
         <input class="admin-form__input" type="text" id="name" name="name" th:value="${item.name}" required />
 
-        <label class="admin-form__label" for="price">가격 *</label>
+        <label class="admin-form__label" for="price">가격 <span class="essential-input">*</span></label>
         <input class="admin-form__input"
                type="number" id="price" name="price" min="0"
                th:value="${item.price}" required />
 
-        <label class="admin-form__label" for="categoryId">카테고리 *</label>
+        <label class="admin-form__label" for="categoryId">카테고리 <span class="essential-input">*</span></label>
         <select class="admin-form__select" id="categoryId" name="categoryId" required>
             <option th:each="cat : ${categories}"
                     th:value="${cat.id}"
@@ -52,7 +52,7 @@
             </option>
         </select>
 
-        <label class="admin-form__label" for="isActive">상태</label>
+        <label class="admin-form__label" for="isActive">상태 <span class="essential-input">*</span></label>
         <select class="admin-form__select" id="isActive" name="isActive" required>
             <option value="true" th:selected="${item.isActive}">판매 중</option>
             <option value="false" th:selected="${!item.isActive}">품절</option>

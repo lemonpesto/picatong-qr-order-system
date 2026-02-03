@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>메뉴판</title>
 
-    <link rel="stylesheet" href="/css/user-unified.css" />
+    <link rel="stylesheet" href="/css/user-unified.css"/>
     <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
 </head>
 
@@ -46,7 +46,8 @@
         <h3 class="user-menu__title" th:text="${cat.name}">카테고리명</h3>
 
         <!-- 카테고리에 속한 아이템들만 출력 -->
-        <div th:each="it, istat : ${items}" th:if="${it.category != null and it.category.id == cat.id}">
+        <div th:each="it, istat : ${items}"
+             th:if="${it.category != null and it.category.id == cat.id}">
             <div
                     class="user-menu__card js-menu-card"
                     th:classappend="${it.isActive} ? '' : ' user-menu__card--soldout'"
@@ -104,7 +105,7 @@
 
             <div id="comment-row" class="user-sheet__comment" style="display:none">
                 <label for="sheet-comment" class="user-sheet__label">요청사항</label>
-                <input id="sheet-comment" type="text" placeholder="예: 덜 달게, 상큼하게 등" maxlength="50" />
+                <input id="sheet-comment" type="text" placeholder="예: 덜 달게, 상큼하게 등" maxlength="50"/>
             </div>
         </div>
 
@@ -144,9 +145,18 @@
     });
 
     window.addEventListener("beforeunload", () => {
-        try { navStomp?.disconnect(); } catch (e) {}
-        try { cartStomp?.disconnect(); } catch (e) {}
-        try { itemUpdateStomp?.disconnect(); } catch (e) {}
+        try {
+            navStomp?.disconnect();
+        } catch (e) {
+        }
+        try {
+            cartStomp?.disconnect();
+        } catch (e) {
+        }
+        try {
+            itemUpdateStomp?.disconnect();
+        } catch (e) {
+        }
     });
 
     function connectNavTopic() {
@@ -229,14 +239,27 @@
     }
 
     function bindCategoryScroll() {
+        const tabsEl = document.querySelector(".user-tabs");
+
         document.querySelectorAll(".js-category-btn").forEach((btn) => {
             btn.addEventListener("click", () => {
-                document.querySelectorAll(".js-category-btn").forEach(b => b.classList.remove("user-tabs__btn--active"));
+                document.querySelectorAll(".js-category-btn")
+                    .forEach(b => b.classList.remove("user-tabs__btn--active"));
                 btn.classList.add("user-tabs__btn--active");
 
                 const id = btn.dataset.target;
                 const section = document.getElementById(id);
-                if (section) section.scrollIntoView({ behavior: "smooth", block: "start" });
+                if (!section) return;
+
+                // tabs가 sticky/fixed라면 클릭 시점의 bottom 값이 스크롤 후에도 동일하므로 정확하게 맞음.
+                const tabsBottom = tabsEl ? tabsEl.getBoundingClientRect().bottom : 0;
+                const sectionTopOnPage = section.getBoundingClientRect().top + window.scrollY;
+                const targetY = sectionTopOnPage - tabsBottom;
+
+                window.scrollTo({
+                    top: Math.max(0, targetY),
+                    behavior: "smooth",
+                });
             });
         });
     }
@@ -249,8 +272,15 @@
         document.getElementById("close-sheet").addEventListener("click", closeBottomSheet);
         document.getElementById("overlay").addEventListener("click", closeBottomSheet);
 
-        document.getElementById("plus").addEventListener("click", () => { qty++; updateQtyUI(); });
-        document.getElementById("minus").addEventListener("click", () => { if (qty <= 1) return; qty--; updateQtyUI(); });
+        document.getElementById("plus").addEventListener("click", () => {
+            qty++;
+            updateQtyUI();
+        });
+        document.getElementById("minus").addEventListener("click", () => {
+            if (qty <= 1) return;
+            qty--;
+            updateQtyUI();
+        });
 
         document.getElementById("add-to-cart").addEventListener("click", onAddToCart);
     }
@@ -294,8 +324,8 @@
         try {
             const res = await fetch("/cart/add", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ itemId: currItemId, quantity: qty }),
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({itemId: currItemId, quantity: qty}),
             });
 
             if (!res.ok) {
@@ -338,14 +368,26 @@
             if (!res.ok) return;
             const data = await res.json();
             renderCartButton(data);
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error(e);
+        }
     }
 
-    function safeJson(str) { try { return JSON.parse(str); } catch { return null; } }
-    function formatComma(n) { return Number(n ?? 0).toLocaleString("ko-KR"); }
-    function formatWon(n) { return `${formatComma(n)}원`; }
-</script>
+    function safeJson(str) {
+        try {
+            return JSON.parse(str);
+        } catch {
+            return null;
+        }
+    }
 
-<script th:src="@{/js/toast.js}"></script>
+    function formatComma(n) {
+        return Number(n ?? 0).toLocaleString("ko-KR");
+    }
+
+    function formatWon(n) {
+        return `${formatComma(n)}원`;
+    }
+</script>
 </body>
 </html>

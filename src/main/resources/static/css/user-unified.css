@@ -239,7 +239,7 @@ body.user {
     padding: 12px var(--u-pad-x);
     background: #fff;
     overflow-x: auto;
-    border-bottom: 1px solid var(--u-line);
+    /*border-bottom: 1px solid var(--u-line);*/
 }
 
 .user-tabs::-webkit-scrollbar { display: none; }
