@@ -21,7 +21,7 @@ public class Cart {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "table_id")
+    @JoinColumn(name = "table_id", nullable = false)
     private TableEntity table;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)

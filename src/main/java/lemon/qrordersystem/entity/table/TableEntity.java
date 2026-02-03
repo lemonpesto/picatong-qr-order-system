@@ -15,8 +15,14 @@ public class TableEntity {
     @Column(name = "table_id")
     private Long id;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private Integer tableNum;
+
+    @Column(nullable = false)
     private String accessKey;
-    private Boolean isActive;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean isActive = true;
+
 }

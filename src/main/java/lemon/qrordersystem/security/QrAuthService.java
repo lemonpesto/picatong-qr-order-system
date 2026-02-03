@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lemon.qrordersystem.entity.table.TableEntity;
 import lemon.qrordersystem.repository.TableRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -13,8 +14,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.List;
 
+@Slf4j
 @Service
 public class QrAuthService {
 
@@ -34,8 +38,15 @@ public class QrAuthService {
     }
 
     public void loginAdminByKey(String key, HttpServletRequest req, HttpServletResponse res) {
-        if (key == null || !key.equals(adminKey)) {
-            throw new IllegalArgumentException("Invalid admin key");
+        if (key == null || !MessageDigest.isEqual(
+                key.getBytes(StandardCharsets.UTF_8),
+                adminKey.getBytes(StandardCharsets.UTF_8))) {
+
+            // 로그 남기기
+            log.warn("Invalid admin key attempt from IP: {}",
+                    req.getRemoteAddr());
+
+            throw new IllegalArgumentException("Authentication failed");
         }
 
         CustomUserDetails admin = new CustomUserDetails(

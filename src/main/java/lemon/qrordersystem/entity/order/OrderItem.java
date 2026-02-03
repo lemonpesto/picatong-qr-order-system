@@ -17,17 +17,19 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 
+    @Column(nullable = false)
     private int orderPrice; // 주문 당시 가격
-    private int quantity; // 주문 수량
 
+    @Column(nullable = false)
+    private int quantity;   // 주문 수량
 
     @Builder.Default
     @Column(nullable = false)
@@ -35,7 +37,7 @@ public class OrderItem {
 
     @Builder.Default
     @Column(nullable = false)
-    private Boolean served = false;  // 서빙 완료 여부
+    private Boolean served = false; // 서빙 완료 여부
 
     public void setOrder(Order order) {
         this.order = order;
