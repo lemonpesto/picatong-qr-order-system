@@ -39,7 +39,9 @@ public class OrderController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         Long tableId = userDetails.getId();
-        Order order = orderService.createOrder(tableId); // cart는 ORDERED 상태로 전이 && order 생성
+
+        // PAYMENT_PENDING 있으면 그걸로 결제 계속하기
+        Order order = orderService.getOrCreatePaymentPendingOrder(tableId); // cart는 ORDERING 상태로 전이 && (order 생성 or get)
         return "redirect:/payment?orderId=" + order.getId();
     }
 

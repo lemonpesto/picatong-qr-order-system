@@ -89,6 +89,15 @@ public class OrderService {
         return savedOrder;
     }
 
+    @Transactional
+    public Order getOrCreatePaymentPendingOrder(Long tableId) {
+
+        // 1) 이미 미결제 주문이 있으면 새로 만들지 말고 그대로 반환
+        return orderRepository
+                .findFirstByTable_IdAndStatusOrderByCreatedAtDesc(tableId, OrderStatus.PAYMENT_PENDING)
+                .orElseGet(() -> createOrder(tableId));
+    }
+
     // ============================================================================
     // 고객 측 주문 처리
     // ============================================================================

@@ -1,5 +1,5 @@
 @font-face {
-    font-family: "Pretendard";
+    font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     font-style: normal;
     font-weight: 400;
     font-display: swap;
@@ -71,13 +71,13 @@ body.user a {
  * ========================================================= */
 .u-btn {
     width: 100%;
-    height: 52px;
+    height: 50px;
     border: 0;
     border-radius: var(--u-radius-sm);
     cursor: pointer;
 
-    font-size: 16px;
-    font-weight: 900;
+    font-size: 18px;
+    font-weight: 600;
 
     display: inline-flex;
     align-items: center;
@@ -110,7 +110,7 @@ body.user a {
     border: 0;
     background: #fff3e0;
     color: #ff8d00;
-    font-weight: 900;
+    font-weight: 700;
     box-shadow: none;
 }
 
@@ -137,7 +137,7 @@ body.user a {
     padding: 0;
     background: transparent;
     color: var(--u-red);
-    font-weight: 900;
+    font-weight: 700;
     text-decoration: underline;
     border-radius: 0;
 }
@@ -177,7 +177,7 @@ body.user a {
 
 .user-nav__title {
     font-size: 18px;
-    font-weight: 900;
+    font-weight: 700;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -185,7 +185,7 @@ body.user a {
 
 .user-nav__logo {
     font-size: 18px;
-    font-weight: 900;
+    font-weight: 700;
 }
 
 .user-nav__right {
@@ -196,7 +196,7 @@ body.user a {
 
 .user-nav__table {
     font-size: 16px;
-    font-weight: 900;
+    font-weight: 500;
 }
 
 .user-nav__table-num {
@@ -205,7 +205,7 @@ body.user a {
 
 .user-nav__link {
     font-size: 16px;
-    font-weight: 800;
+    font-weight: 500;
 }
 
 /* =========================================================
@@ -250,7 +250,7 @@ body.user {
     border-radius: 999px;
     background: #f2f2f2;
     color: #737373;
-    font-weight: 900;
+    font-weight: 600;
     font-size: 17px;
     cursor: pointer;
     white-space: nowrap;
@@ -322,8 +322,8 @@ body.user {
 /* main.css list-box h4 느낌 */
 .user-menu__name {
     font-size: 16px;
-    margin: 10px 5px 2px;
-    font-weight: 700;
+    margin: 10px 5px 5px;
+    font-weight: 600;
 }
 
 /* main.css price 느낌 */
@@ -424,7 +424,7 @@ body.user {
 .user-sheet__title {
     margin:0;
     font-size: 18px;
-    font-weight: 900;
+    font-weight: 700;
 }
 
 .user-sheet__close {
@@ -439,7 +439,7 @@ body.user {
     font-size: 16px;
     color: var(--u-muted);
     margin: 0 0 28px;
-    font-weight: 800;
+    font-weight: 500;
 }
 
 .user-sheet__body { margin-bottom: 22px; }
@@ -488,11 +488,11 @@ body.user {
 .user-qty__value {
     width: 28px;
     text-align:center;
-    font-weight: 900;
+    font-weight: 600;
     font-size: 16px;
 }
 
-.user-sheet__label { font-size: 16px; font-weight: 900; }
+.user-sheet__label { font-size: 16px; font-weight: 600; }
 
 .user-sheet__comment {
     display:flex;
@@ -518,7 +518,7 @@ body.user {
 
 .user-cart__notice {
     font-size: 18px;
-    font-weight: 900;
+    font-weight: 700;
     margin: 0;
 }
 
@@ -530,7 +530,7 @@ body.user {
     padding: 20px 16px;
 }
 
-.user-inline__text { padding: 20px 0; font-size: 18px; font-weight: 900; }
+.user-inline__text { padding: 20px 0; font-size: 18px; font-weight: 500; }
 
 /*user-inline__btn {*/
 /*    color: var(--u-primary);*/
@@ -545,7 +545,7 @@ body.user {
 
 .user-cart__summary {
     font-size: 18px;
-    font-weight: 900;
+    font-weight: 600;
     margin: 0 0 14px;
 }
 
@@ -562,7 +562,7 @@ body.user {
 
 .user-cart__name {
     font-size: 18px;
-    font-weight: 900;
+    font-weight: 500;
     margin: 0 0 6px;
     white-space: nowrap;
     overflow:hidden;
@@ -571,7 +571,7 @@ body.user {
 
 .user-cart__price {
     font-size: 16px;
-    font-weight: 900;
+    font-weight: 500;
     margin: 0;
 }
 
@@ -609,7 +609,7 @@ body.user {
 
 .user-orders__label {
     font-size: 18px;
-    font-weight: 900;
+    font-weight: 600;
 }
 
 .user-orders__time {
@@ -625,7 +625,7 @@ body.user {
 }
 
 .user-orders__itemname,
-.user-orders__itemprice { font-size: 16px; font-weight: 800; }
+.user-orders__itemprice { font-size: 16px; font-weight: 400; }
 
 .user-orders__foot {
     display:flex;
@@ -637,7 +637,7 @@ body.user {
 
 .user-orders__total {
     font-size: 16px;
-    font-weight: 900;
+    font-weight: 600;
 }
 
 /* =========================================================
@@ -677,14 +677,14 @@ body.user {
     padding: 10px 0;
     line-height: 1.5;
     font-size: 18px;
-    font-weight: 900;
+    font-weight: 600;
 }
 
 .user-center__sub {
     margin: 0;
     padding: 10px 0 5px;
     font-size: 16px;
-    font-weight: 800;
+    font-weight: 500;
     color: #737373;
 }
 

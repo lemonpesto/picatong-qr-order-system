@@ -22,7 +22,7 @@
 <!-- 공통 사이드바 & 상단바 끝 -->
 
 <main class="admin-container" style="padding-top:16px;">
-    <section class="admin-order__list">
+    <section id="kitchen-list" class="admin-order__list">
         <div th:if="${orders.isEmpty()}" class="admin-empty">
             <p>조리할 주문이 없습니다</p>
         </div>
@@ -242,8 +242,10 @@
 
         await disableWhile(button, async () => {
             try {
-                await fetch(url, { method: 'POST' });
-                // WebSocket으로 실시간 동기화됨
+                const result = await postJson(url);
+                if (result.success && result.message) {
+                    showToast(result.message);
+                }
             } catch (err) {
                 console.error(err);
                 alert('오류가 발생했습니다: ' + (err?.message || err));

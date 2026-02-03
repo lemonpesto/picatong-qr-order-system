@@ -77,10 +77,9 @@ public class AdminKitchenController {
      * 전체 조리 완료 처리
      */
     @PostMapping("/{orderId}/complete")
-    public String completeCooking(@PathVariable Long orderId,
-                                  RedirectAttributes redirectAttrs) {
+    @ResponseBody
+    public Map<String, Object> completeCooking(@PathVariable Long orderId) {
         orderService.completeCooking(orderId);
-        redirectAttrs.addFlashAttribute("successMessage", "조리가 완료되었습니다.");
-        return "redirect:/admin/kitchen/orders";
+        return Map.of("success", true, "message", "조리가 완료되었습니다.");
     }
 }

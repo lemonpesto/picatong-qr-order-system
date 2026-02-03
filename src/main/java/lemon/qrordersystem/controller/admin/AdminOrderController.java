@@ -98,11 +98,10 @@ public class AdminOrderController {
      * 서빙 완료 처리
      */
     @PostMapping("/{orderId}/complete")
-    public String completeServing(@PathVariable Long orderId,
-                                  RedirectAttributes redirectAttrs) {
+    @ResponseBody
+    public Map<String, Object> completeServing(@PathVariable Long orderId) {
         orderService.completeServing(orderId);
-        redirectAttrs.addFlashAttribute("successMessage", "서빙이 완료되었습니다.");
-        return "redirect:/admin/orders/hall/serve";
+        return Map.of("success", true, "message", "서빙이 완료되었습니다.");
     }
 
     /* 주문 내역 */
