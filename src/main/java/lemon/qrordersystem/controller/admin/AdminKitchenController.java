@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @RequestMapping("/admin/kitchen/orders")
 public class AdminKitchenController {
-    
+
     private final OrderService orderService;
 
     /**
@@ -56,15 +56,10 @@ public class AdminKitchenController {
      */
     @PostMapping("/{orderId}/items/{orderItemId}/cook")
     @ResponseBody
-    public Map<String, Object> cookItem(
-            @PathVariable Long orderId,
-            @PathVariable Long orderItemId) {
-        try {
-            orderService.markItemAsCooked(orderId, orderItemId);
-            return Map.of("success", true);
-        } catch (Exception e) {
-            return Map.of("success", false, "message", e.getMessage());
-        }
+    public Map<String, Object> cookItem(@PathVariable Long orderId,
+                                        @PathVariable Long orderItemId) {
+        orderService.markItemAsCooked(orderId, orderItemId);
+        return Map.of("success", true);
     }
 
     /**
@@ -72,15 +67,10 @@ public class AdminKitchenController {
      */
     @PostMapping("/{orderId}/items/{orderItemId}/uncook")
     @ResponseBody
-    public Map<String, Object> uncookItem(
-            @PathVariable Long orderId,
-            @PathVariable Long orderItemId) {
-        try {
-            orderService.markItemAsUncooked(orderId, orderItemId);
-            return Map.of("success", true);
-        } catch (Exception e) {
-            return Map.of("success", false, "message", e.getMessage());
-        }
+    public Map<String, Object> uncookItem(@PathVariable Long orderId,
+                                          @PathVariable Long orderItemId) {
+        orderService.markItemAsUncooked(orderId, orderItemId);
+        return Map.of("success", true);
     }
 
     /**

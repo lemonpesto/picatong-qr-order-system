@@ -207,7 +207,8 @@ public class OrderService {
         log.info("아이템 조리 완료: orderId={}, itemId={}", orderId, orderItemId);
 
         // 트랜잭션 커밋 후 WebSocket 알림
-        ws.orderItemProgress(orderId, orderItemId, true);
+        ws.orderItemProgress(orderId, orderItemId, true);      // 주방->서빙 간 동기화
+        ws.kitchenItemProgress(orderId, orderItemId, true);    // 주방 페이지 내 동기화
     }
 
     /**
@@ -222,7 +223,8 @@ public class OrderService {
         log.info("아이템 조리 취소: orderId={}, itemId={}", orderId, orderItemId);
 
         // 트랜잭션 커밋 후 WebSocket 알림
-        ws.orderItemProgress(orderId, orderItemId, false);
+        ws.orderItemProgress(orderId, orderItemId, false);     // 주방->서빙 간 동기화
+        ws.kitchenItemProgress(orderId, orderItemId, false);   // 주방 페이지 내 동기화
     }
 
     /**
@@ -233,15 +235,20 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
 
+        // COOKING 상태일 때만 SERVING으로 변경 (이미 SERVING이면 스킵)
+        if (order.getStatus() != OrderStatus.COOKING) {
+            return;
+        }
+
         // 모든 아이템을 조리 완료로 표시
         order.getOrderItems().forEach(OrderItem::markAsCooked);
-
-        // 상태를 SERVING으로 변경
         order.completeCooking();
-        log.info("전체 조리 완료: orderId={}", orderId);
+
+        log.info("전체 조리 완료: orderId={}, status={}", orderId, order.getStatus());
 
         // 트랜잭션 커밋 후 WebSocket 알림
         ws.adminServeReload();
+        ws.kitchenOrderComplete(orderId);  // 주방 페이지 내 동기화
     }
 
     // ============================================================================
@@ -249,15 +256,49 @@ public class OrderService {
     // ============================================================================
 
     /**
-     * 서빙 완료 (SERVING → COMPLETED)
+     * 개별 아이템 서빙 완료 처리
+     */
+    @Transactional
+    public void markItemAsServed(Long orderId, Long orderItemId) {
+        OrderItem orderItem = orderItemRepository.findByIdAndOrder_Id(orderItemId, orderId)
+                .orElseThrow(() -> new BusinessException("아이템을 찾을 수 없습니다."));
+
+        if (orderItem.getServed()) return;
+
+        orderItem.markAsServed();
+        log.info("아이템 서빙 완료: orderId={}, itemId={}", orderId, orderItemId);
+
+        // 트랜잭션 커밋 후 WebSocket 알림
+        ws.orderItemServeProgress(orderId, orderItemId, true);  // 서빙 페이지 내 동기화
+    }
+
+    /**
+     * 개별 아이템 서빙 취소
+     */
+    @Transactional
+    public void markItemAsUnserved(Long orderId, Long orderItemId) {
+        OrderItem orderItem = orderItemRepository.findByIdAndOrder_Id(orderItemId, orderId)
+                .orElseThrow(() -> new BusinessException("아이템을 찾을 수 없습니다."));
+
+        orderItem.markAsUnserved();
+        log.info("아이템 서빙 취소: orderId={}, itemId={}", orderId, orderItemId);
+
+        // 트랜잭션 커밋 후 WebSocket 알림
+        ws.orderItemServeProgress(orderId, orderItemId, false); // 서빙 페이지 내 동기화
+    }
+
+    /**
+     * 전체 아이템 서빙 완료 (SERVING -> COMPLETED)
      */
     @Transactional
     public void completeServing(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
 
-
         order.completeServing();
+
+        // 트랜잭션 커밋 후 WebSocket 알림
+        ws.serveOrderComplete(orderId); // 서빙 페이지 내 동기화
     }
 
     // ============================================================================

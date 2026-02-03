@@ -121,7 +121,7 @@
                     <label class="admin-checklist__label">
                         <input type="checkbox"
                                class="admin-checklist__checkbox js-serve-checkbox"
-                               th:checked="false"
+                               th:checked="${oi.served}"
                                th:disabled="${oi.item.category.isManufactured ? !oi.cooked : false}"
                                th:attr="data-order-id=${order.id}, data-order-item-id=${oi.id}"
                                onchange="onServeCheckChanged(this)"/>
@@ -134,15 +134,13 @@
             </ul>
 
             <div style="margin-top:12px;">
-                <form th:action="@{/admin/orders/{orderId}/complete(orderId=${order.id})}" method="post">
-                    <button type="submit"
-                            class="btn btn--primary js-btn-serve-complete"
-                            th:attr="data-order-id=${order.id}"
-                            disabled
-                            onclick="return confirm('서빙이 완료되었습니까?')">
-                        서빙 완료
-                    </button>
-                </form>
+                <button type="button"
+                        class="btn btn--primary js-btn-serve-complete"
+                        th:attr="data-order-id=${order.id}"
+                        disabled
+                        onclick="completeServeOrder(this)">
+                    서빙 완료
+                </button>
             </div>
         </article>
     </section>
@@ -169,6 +167,8 @@
             hallReload: '/topic/admin/orders/hall',
             hallServeReload: '/topic/admin/orders/hall/serve',
             orderProgress: (orderItemId) => `/topic/orders/${orderItemId}/progress`,
+            serveProgress: (orderItemId) => `/topic/serve/orders/${orderItemId}/progress`,
+            serveComplete: (orderId) => `/topic/serve/orders/${orderId}/complete`,
         },
     };
 
@@ -176,6 +176,7 @@
     let stompClient = null;
 
     const subscribedProgress = new Set();
+    const subscribedComplete = new Set();
 
     /* =========================================================
      *  Utils
@@ -214,6 +215,7 @@
 
         if (isServeTab()) {
             subscribeServeProgressTopics();
+            subscribeServeCompleteTopics();
         }
     };
 
@@ -241,13 +243,53 @@
                 if (subscribedProgress.has(orderItemId)) return;
                 subscribedProgress.add(orderItemId);
 
+                // 주방->서빙 조리완료 동기화
                 stompClient.subscribe(WS.topics.orderProgress(orderItemId), (message) => {
                     const evt = safeJson(message.body);
                     if (!evt) return;
 
                     updateOrderItemCooked(evt.orderId, evt.orderItemId, evt.checked);
                 });
+
+                // 서빙 페이지 내 실시간 동기화
+                stompClient.subscribe(WS.topics.serveProgress(orderItemId), (message) => {
+                    const evt = safeJson(message.body);
+                    if (!evt) return;
+
+                    updateOrderItemServed(evt.orderId, evt.orderItemId, evt.checked);
+                });
             });
+    };
+
+    const subscribeServeCompleteTopics = () => {
+        document
+            .querySelectorAll('#serve-list .js-serve-card[data-order-id]')
+            .forEach((card) => {
+                const orderId = card.getAttribute('data-order-id');
+                if (!orderId) return;
+
+                if (subscribedComplete.has(orderId)) return;
+                subscribedComplete.add(orderId);
+
+                stompClient.subscribe(WS.topics.serveComplete(orderId), (message) => {
+                    const evt = safeJson(message.body);
+                    if (!evt) return;
+
+                    const doneOrderId = evt?.data?.orderId;
+                    if (evt.type === 'COMPLETED' && doneOrderId) {
+                        removeOrderCard(doneOrderId);
+                    }
+                });
+            });
+    };
+
+    const removeOrderCard = (orderId) => {
+        const orderCard = document.querySelector(`.js-serve-card[data-order-id="${orderId}"]`);
+        if (!orderCard) return;
+
+        orderCard.style.transition = 'opacity 0.3s';
+        orderCard.style.opacity = '0';
+        setTimeout(() => orderCard.remove(), 300);
     };
 
     /* =========================================================
@@ -281,6 +323,53 @@
     const onServeCheckChanged = (checkbox) => {
         const card = checkbox?.closest('.js-serve-card');
         if (card) updateCompleteButton(card);
+
+        // AJAX로 서버에 서빙 상태 전송
+        const orderId = checkbox.getAttribute('data-order-id');
+        const orderItemId = checkbox.getAttribute('data-order-item-id');
+        const isChecked = checkbox.checked;
+
+        const endpoint = isChecked
+            ? `/admin/orders/${orderId}/items/${orderItemId}/serve`
+            : `/admin/orders/${orderId}/items/${orderItemId}/unserve`;
+
+        fetch(endpoint, { method: 'POST' })
+            .then(res => res.json())
+            .catch(err => console.error('서빙 상태 업데이트 실패:', err));
+    };
+
+    const completeServeOrder = async (button) => {
+        if (!confirm('서빙이 완료되었습니까?')) return;
+
+        const orderId = button?.getAttribute('data-order-id');
+        if (!orderId) return;
+
+        const url = `/admin/orders/${orderId}/complete`;
+
+        const prev = button.disabled;
+        button.disabled = true;
+        try {
+            await fetch(url, { method: 'POST' });
+            // WebSocket으로 실시간 동기화됨
+        } catch (err) {
+            console.error(err);
+            alert('오류가 발생했습니다: ' + (err?.message || err));
+        } finally {
+            button.disabled = prev;
+        }
+    };
+
+    const updateOrderItemServed = (orderId, orderItemId, served) => {
+        const orderCard = document.querySelector(`.js-serve-card[data-order-id="${orderId}"]`);
+        if (!orderCard) return;
+
+        const checkbox = orderCard.querySelector(
+            `input.js-serve-checkbox[data-order-id="${orderId}"][data-order-item-id="${orderItemId}"]`
+        );
+        if (!checkbox) return;
+
+        checkbox.checked = served;
+        updateCompleteButton(orderCard);
     };
 
     const updateOrderItemCooked = (orderId, orderItemId, cooked) => {
@@ -339,6 +428,7 @@
     window.addEventListener('beforeunload', disconnectQuietly);
 
     window.onServeCheckChanged = onServeCheckChanged;
+    window.completeServeOrder = completeServeOrder;
 </script>
 
 </body>

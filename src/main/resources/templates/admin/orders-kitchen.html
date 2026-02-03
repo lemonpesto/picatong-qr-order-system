@@ -56,14 +56,12 @@
             </ul>
 
             <div style="margin-top:12px;">
-                <form th:action="@{/admin/kitchen/orders/{orderId}/complete(orderId=${order.orderId})}" method="post">
-                    <button type="submit"
-                            class="btn btn--dark js-btn-complete"
-                            th:attr="data-order-id=${order.orderId}"
-                            onclick="return confirm('조리가 완료되었습니까?')">
-                        조리 완료
-                    </button>
-                </form>
+                <button type="button"
+                        class="btn btn--dark js-btn-complete"
+                        th:attr="data-order-id=${order.orderId}"
+                        onclick="completeKitchenOrder(this)">
+                    조리 완료
+                </button>
             </div>
         </article>
     </section>
@@ -84,7 +82,13 @@
     const WS = {
         url: '/ws',
         topic: '/topic/admin/kitchen/orders',
+        kitchenProgress: (orderItemId) => `/topic/kitchen/orders/${orderItemId}/progress`,
+        kitchenComplete: (orderId) => `/topic/kitchen/orders/${orderId}/complete`,
     };
+
+    let stompClient = null;
+    const subscribedProgress = new Set();
+    const subscribedComplete = new Set();
 
     /* =========================================================
     * Utils
@@ -116,19 +120,87 @@
     * ========================================================= */
     const connectKitchenReloadWs = () => {
         const socket = new SockJS(WS.url);
-        const stomp = Stomp.over(socket);
-        stomp.debug = null;
+        stompClient = Stomp.over(socket);
+        stompClient.debug = null;
 
-        stomp.connect({}, () => {
-            stomp.subscribe(WS.topic, (message) => {
+        stompClient.connect({}, () => {
+            // 페이지 전체 reload 토픽
+            stompClient.subscribe(WS.topic, (message) => {
                 const evt = safeJson(message.body);
                 if (!evt || evt.type === 'RELOAD') window.location.reload();
             });
+
+            // 개별 아이템 조리 상태 실시간 동기화
+            subscribeKitchenProgressTopics();
+            // 전체 조리 완료 실시간 동기화
+            subscribeKitchenCompleteTopics();
         });
 
         window.addEventListener('beforeunload', () => {
-            try { stomp.disconnect(); } catch (e) {}
+            try { stompClient.disconnect(); } catch (e) {}
         });
+    };
+
+    const subscribeKitchenProgressTopics = () => {
+        document
+            .querySelectorAll('.js-cook-checkbox[data-order-item-id]')
+            .forEach((cb) => {
+                const orderItemId = cb.getAttribute('data-order-item-id');
+                if (!orderItemId) return;
+
+                if (subscribedProgress.has(orderItemId)) return;
+                subscribedProgress.add(orderItemId);
+
+                stompClient.subscribe(WS.kitchenProgress(orderItemId), (message) => {
+                    const evt = safeJson(message.body);
+                    if (!evt) return;
+
+                    updateOrderItemCooked(evt.orderId, evt.orderItemId, evt.checked);
+                });
+            });
+    };
+
+    const subscribeKitchenCompleteTopics = () => {
+        document
+            .querySelectorAll('.js-kitchen-card[data-order-id]')
+            .forEach((card) => {
+                const orderId = card.getAttribute('data-order-id');
+                if (!orderId) return;
+
+                if (subscribedComplete.has(orderId)) return;
+                subscribedComplete.add(orderId);
+
+                stompClient.subscribe(WS.kitchenComplete(orderId), (message) => {
+                    const evt = safeJson(message.body);
+                    if (!evt) return;
+
+                    const doneOrderId = evt?.data?.orderId;
+                    if (evt.type === 'COMPLETED' && doneOrderId) {
+                        removeOrderCard(doneOrderId);
+                    }
+                });
+            });
+    };
+
+    const removeOrderCard = (orderId) => {
+        const orderCard = document.querySelector(`.js-kitchen-card[data-order-id="${orderId}"]`);
+        if (!orderCard) return;
+
+        orderCard.style.transition = 'opacity 0.3s';
+        orderCard.style.opacity = '0';
+        setTimeout(() => orderCard.remove(), 300);
+    };
+
+    const updateOrderItemCooked = (orderId, orderItemId, cooked) => {
+        const orderCard = document.querySelector(`.js-kitchen-card[data-order-id="${orderId}"]`);
+        if (!orderCard) return;
+
+        const checkbox = orderCard.querySelector(
+            `input.js-cook-checkbox[data-order-id="${orderId}"][data-order-item-id="${orderItemId}"]`
+        );
+        if (!checkbox) return;
+
+        checkbox.checked = cooked;
     };
 
     /* =========================================================
@@ -160,11 +232,31 @@
         });
     };
 
+    const completeKitchenOrder = async (button) => {
+        if (!confirm('조리가 완료되었습니까?')) return;
+
+        const orderId = button?.getAttribute('data-order-id');
+        if (!orderId) return;
+
+        const url = `/admin/kitchen/orders/${orderId}/complete`;
+
+        await disableWhile(button, async () => {
+            try {
+                await fetch(url, { method: 'POST' });
+                // WebSocket으로 실시간 동기화됨
+            } catch (err) {
+                console.error(err);
+                alert('오류가 발생했습니다: ' + (err?.message || err));
+            }
+        });
+    };
+
     document.addEventListener('DOMContentLoaded', () => {
         connectKitchenReloadWs();
     });
 
     window.toggleCooked = toggleCooked;
+    window.completeKitchenOrder = completeKitchenOrder;
 </script>
 </body>
 </html>
