@@ -10,43 +10,47 @@
 </head>
 
 <body class="user">
-<div th:replace="~{fragments/nav :: nav(${navTitle}, null, ${tableNum}, false)}"></div>
-<div th:replace="~{fragments/toast :: toast}"></div>
+    <div th:replace="~{fragments/nav :: nav(${navTitle}, null, ${tableNum}, false)}"></div>
+    <div th:replace="~{fragments/toast :: toast}"></div>
 
-<div class="user-center">
-    <section class="user-center__content">
-        <i class="fas fa-spinner fa-spin user-confirm__spinner"></i>
-        <h3 class="user-center__title">운영진이 입금 내역을 확인 중이니<br />잠시만 기다려주세요!</h3>
-        <span class="user-confirm__hint">
-            * 만약 주문 접수 창이 계속 뜨지 않는다면<br />
-            운영진을 불러주세요
-        </span>
-    </section>
-</div>
+    <div class="user-center">
+        <section class="user-center__content">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;color:#ff8c00;"></i>
+
+            <h3 class="user-center__title">
+                잠시만 기다려 주세요 :)</br>
+                운영진이 입금을 확인하고 있어요.</br>
+                확인 완료 시 바로 주문이 접수됩니다.</br>
+            </h3>
+            <span class="user-confirm__hint">
+                * 화면이 계속 그대로면 운영진에게 말씀해 주세요.
+            </span>
+        </section>
+    </div>
 
 
-<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
-<script th:src="@{/js/toast.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script th:src="@{/js/toast.js}"></script>
 
-<script th:inline="javascript">
-    const tableId = /*[[${tableId}]]*/ null;
+    <script th:inline="javascript">
+        const tableId = /*[[${tableId}]]*/ null;
 
-    window.addEventListener("DOMContentLoaded", () => {
-        const socket = new SockJS('/ws');
-        const stomp = Stomp.over(socket);
-        stomp.debug = null;
+        window.addEventListener("DOMContentLoaded", () => {
+            const socket = new SockJS('/ws');
+            const stomp = Stomp.over(socket);
+            stomp.debug = null;
 
-        stomp.connect({}, () => {
-            stomp.subscribe(`/topic/tables/${tableId}/payment`, (frame) => {
-                const evt = JSON.parse(frame.body);
+            stomp.connect({}, () => {
+                stomp.subscribe(`/topic/tables/${tableId}/payment`, (frame) => {
+                    const evt = JSON.parse(frame.body);
 
-                if (evt?.type === "REDIRECT" && evt?.url) {
-                    window.location.replace(evt.url);
-                }
+                    if (evt?.type === "REDIRECT" && evt?.url) {
+                        window.location.replace(evt.url);
+                    }
+                });
             });
         });
-    });
-</script>
+    </script>
 </body>
 </html>

@@ -47,6 +47,6 @@ public class CartPageController {
         model.addAttribute("returnUrl", "/cart");
         model.addAttribute("tableNum", userDetails.getTableNum());
 
-        return "/user/cart";
+        return "user/cart";
     }
 }

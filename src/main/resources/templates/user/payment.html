@@ -22,8 +22,8 @@
 
         <div class="user-center__sub">
             <span class="user-account">
-              <span id="account-number" class="user-account__number">카카오뱅크 3333257857250</span>
-              <span> (김세진)</span><br />
+              <span id="account-number" class="user-account__number">3333226485597 카카오뱅크</span>
+              <span> (김현수)</span><br />
             </span>
 
             <p style="margin-top: 8px">
@@ -56,20 +56,46 @@
 </div>
 
 <script th:src="@{/js/toast.js}"></script>
-
 <script>
     window.addEventListener("DOMContentLoaded", () => {
         const account = document.getElementById("account-number");
         const toast = document.getElementById("toast");
 
         account?.addEventListener("click", async () => {
+            const accountText = "3333226485597 카카오뱅크";
+
+            // clipboard API 지원 여부 확인
+            if (!navigator.clipboard) {
+                // fallback: 구형 방식 사용
+                try {
+                    const textarea = document.createElement("textarea");
+                    textarea.value = accountText;
+                    textarea.style.position = "fixed";
+                    textarea.style.opacity = "0";
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(textarea);
+
+                    toast.textContent = "계좌번호가 복사됐어요";
+                    toast.classList.add("show");
+                    setTimeout(() => toast.classList.remove("show"), 2000);
+                } catch (err) {
+                    toast.textContent = "복사 실패: " + err.message;
+                    toast.classList.add("show");
+                    setTimeout(() => toast.classList.remove("show"), 2000);
+                }
+                return;
+            }
+
+            // clipboard API 사용
             try {
-                await navigator.clipboard.writeText("카카오뱅크 3333257857250");
+                await navigator.clipboard.writeText(accountText);
                 toast.textContent = "계좌번호가 복사됐어요";
                 toast.classList.add("show");
                 setTimeout(() => toast.classList.remove("show"), 2000);
             } catch (err) {
-                toast.textContent = "복사에 실패했습니다: " + err;
+                toast.textContent = "복사 실패: " + err.message;
                 toast.classList.add("show");
                 setTimeout(() => toast.classList.remove("show"), 2000);
             }

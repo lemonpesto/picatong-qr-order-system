@@ -81,8 +81,8 @@
             <div class="admin-order__actions admin-order__actions--confirm">
                 <form th:action="@{/admin/orders/{orderId}/cancel(orderId=${order.id})}" method="post" style="display:inline;">
                     <button type="submit"
-                            class="btn btn--cancel js-btn-cancel"
-                            th:disabled="${order.status.name() == 'PAYMENT_PENDING'}"
+                            class="btn js-btn-cancel"
+                            th:classappend="${order.status.name() == 'PAYMENT_PENDING'} ? ' btn--cancel--pending' : ' btn--cancel--after'"
                             onclick="return confirm('주문을 취소하시겠습니까?')">
                         주문 취소
                     </button>
@@ -90,8 +90,8 @@
 
                 <form th:action="@{/admin/orders/{orderId}/confirm(orderId=${order.id})}" method="post" style="display:inline;">
                     <button type="submit"
-                            class="btn btn--confirm js-btn-confirm"
-                            th:disabled="${order.status.name() == 'PAYMENT_PENDING'}"
+                            class="btn js-btn-confirm"
+                            th:classappend="${order.status.name() == 'PAYMENT_PENDING'} ? ' btn--confirm--pending' : ' btn--confirm--waiting'"
                             onclick="return confirm('입금을 확인하시겠습니까?')">
                         입금 확인
                     </button>
@@ -302,13 +302,20 @@
             .querySelectorAll('#paid-list .js-order-card[data-order-id]')
             .forEach((card) => {
                 // admin-card--accent-green이면 waiting 상태로 보자
-                const isWaiting = card.classList.contains('admin-card--accent-green');
+                const isAfterPaymentPending = card.classList.contains('admin-card--accent-green');
 
                 const confirmBtn = card.querySelector('button.js-btn-confirm');
                 const cancelBtn  = card.querySelector('button.js-btn-cancel');
 
-                if (confirmBtn) confirmBtn.disabled = !isWaiting;
-                if (cancelBtn)  cancelBtn.disabled  = !isWaiting;
+                if (confirmBtn) {
+                    confirmBtn.classList.toggle('btn--confirm--pending', !isAfterPaymentPending);
+                    confirmBtn.classList.toggle('btn--confirm--after',   isAfterPaymentPending);
+                }
+
+                if (cancelBtn) {
+                    cancelBtn.classList.toggle('btn--cancel--pending', !isAfterPaymentPending);
+                    cancelBtn.classList.toggle('btn--cancel--after',   isAfterPaymentPending);
+                }
             });
     };
 

@@ -5,6 +5,7 @@ import lemon.qrordersystem.entity.table.TableEntity;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,7 +47,7 @@ public class Cart {
             throw new IllegalStateException("Cart is not ACTIVE");
         }
         this.status = CartStatus.ORDERING;
-        this.lockedAt = LocalDateTime.now();
+        this.lockedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 
     public void unlockToActive() {

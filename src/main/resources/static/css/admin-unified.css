@@ -566,7 +566,9 @@ body.admin ul {
     transform: scale(0.99);
 }
 
-.btn:disabled {
+.btn:disabled,
+.btn--cancel--pending,
+.btn--confirm--pending {
     background: var(--a-line) !important;
     color: #9ca3af !important;
     cursor: not-allowed;
@@ -583,12 +585,12 @@ body.admin ul {
     color: #fff;
 }
 
-.btn--confirm {
+.btn--confirm--waiting {
     background: var(--a-green);
     color: #fff;
 }
 
-.btn--cancel {
+.btn--cancel--after {
     background: var(--a-soft);
     color: var(--a-muted);
 }
