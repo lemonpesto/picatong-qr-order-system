@@ -195,7 +195,7 @@ body.user a {
 }
 
 .user-nav__table {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 500;
 }
 
@@ -204,7 +204,7 @@ body.user a {
 }
 
 .user-nav__link {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 500;
 }
 
@@ -287,28 +287,26 @@ body.user {
     flex-shrink: 0;
 }
 
-.user-callout__text { line-height: 1.5; }
+.user-callout__text {
+    line-height: 1.5;
+    font-size: 16px;
+}
 
 /* =========================================================
  * Menu Section / Item Card (items)
  * ========================================================= */
-/* =========================================================
- * Menu Section / Item (items) - 원래 리스트형 모양
- * ========================================================= */
 .user-menu__section {
     background: #fff;
-    /* main.css의 menu-section 느낌 */
     padding: 8px 15px 0;
 }
 
 .user-menu__title {
     margin: 0 5px;
-    padding: 10px 0 5px;
-    font-size: 18px;
+    padding: 15px 0 10px;
+    font-size: 19px;
     font-weight: 700;
 }
 
-/* ✅ 메뉴 "카드"를 카드처럼 보이지 않게: 리스트형 */
 .user-menu__card {
     padding: 8px 0;
     min-height: 70px;
@@ -319,23 +317,21 @@ body.user {
     background: transparent;
 }
 
-/* main.css list-box h4 느낌 */
 .user-menu__name {
-    font-size: 16px;
-    margin: 10px 5px 5px;
+    font-size: 18px;
+    margin: 10px 5px 7px;
     font-weight: 600;
 }
 
-/* main.css price 느낌 */
 .user-menu__price {
-    font-size: 15px;
+    font-size: 18px;
     margin: 0 5px;
     font-weight: 400;
 }
 
 /* main.css description 느낌 */
 .user-menu__desc {
-    font-size: 14px;
+    font-size: 16px;
     margin: 10px 5px;
     color: #737373;
     line-height: 1.5;
@@ -424,7 +420,7 @@ body.user {
 .user-sheet__title {
     margin:0;
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 .user-sheet__close {
@@ -436,7 +432,7 @@ body.user {
 }
 
 .user-sheet__sub {
-    font-size: 16px;
+    font-size: 18px;
     color: var(--u-muted);
     margin: 0 0 28px;
     font-weight: 500;
@@ -492,7 +488,7 @@ body.user {
     font-size: 16px;
 }
 
-.user-sheet__label { font-size: 16px; font-weight: 600; }
+.user-sheet__label { font-size: 18px; font-weight: 500; }
 
 .user-sheet__comment {
     display:flex;
@@ -516,12 +512,6 @@ body.user {
 .user-cart__empty,
 .user-cart__list { }
 
-.user-cart__notice {
-    font-size: 18px;
-    font-weight: 700;
-    margin: 0;
-}
-
 .user-inline {
     display:flex;
     flex-direction: column;
@@ -532,20 +522,9 @@ body.user {
 
 .user-inline__text { padding: 20px 0; font-size: 18px; font-weight: 500; }
 
-/*user-inline__btn {*/
-/*    color: var(--u-primary);*/
-/*}*/
-/*.user-inline__btn:hover {*/
-/*    background: color-mix(in srgb, var(--u-primary) 18%, white);*/
-/*}*/
-
-/*.user-inline__btn:active {*/
-/*    background: color-mix(in srgb, var(--u-primary) 26%, white);*/
-/*}*/
-
 .user-cart__summary {
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 19px;
+    font-weight: 700;
     margin: 0 0 14px;
 }
 
@@ -562,7 +541,7 @@ body.user {
 
 .user-cart__name {
     font-size: 18px;
-    font-weight: 500;
+    font-weight: 600;
     margin: 0 0 6px;
     white-space: nowrap;
     overflow:hidden;
@@ -570,15 +549,15 @@ body.user {
 }
 
 .user-cart__price {
-    font-size: 16px;
-    font-weight: 500;
+    font-size: 18px;
+    font-weight: 400;
     margin: 0;
 }
 
 .user-cart__desc {
     display:block;
-    margin-top: 6px;
-    font-size: 14px;
+    margin-top: 7px;
+    font-size: 16px;
     color: #888;
     line-height: 1.4;
 }
@@ -608,7 +587,7 @@ body.user {
 }
 
 .user-orders__label {
-    font-size: 18px;
+    font-size: 19px;
     font-weight: 600;
 }
 
@@ -636,7 +615,7 @@ body.user {
 }
 
 .user-orders__total {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
 }
 
@@ -662,9 +641,18 @@ body.user {
     padding-bottom: 16px;
 }
 
+/* payment 페이지에만 하단 여백 적용 (고정 버튼 때문에) */
+#payment-page .user-center__content {
+    padding-bottom: calc(90px + env(safe-area-inset-bottom));  /* 버튼 높이만큼 여백 */
+}
+
 .user-center__actions {
-    flex: 0 0 auto;
-    padding: 16px 0 calc(16px + env(safe-area-inset-bottom));
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px var(--u-pad-x) calc(16px + env(safe-area-inset-bottom));
+    z-index: 100;
 }
 
 .user-center__actions .user-bottombar {
@@ -676,7 +664,7 @@ body.user {
     margin-top: 30px;
     padding: 10px 0;
     line-height: 1.5;
-    font-size: 18px;
+    font-size: 19px;
     font-weight: 600;
 }
 
@@ -694,8 +682,12 @@ body.user {
     cursor: pointer;
 }
 
-.user-confirm__spinner { font-size: 24px; color: var(--u-primary); }
 .user-confirm__hint { margin-top: 6px; font-size: 16px; color:#888; line-height: 1.4; }
+
+@keyframes u-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
 
 /* =========================================================
  * Toast (기존 토스트 JS/마크업과 호환)

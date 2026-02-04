@@ -1,6 +1,7 @@
 package lemon.qrordersystem.dto;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 public record ApiErrorResponse(
         LocalDateTime timestamp,
@@ -10,6 +11,6 @@ public record ApiErrorResponse(
         String path
 ) {
     public static ApiErrorResponse of(int status, String error, String message, String path) {
-        return new ApiErrorResponse(LocalDateTime.now(), status, error, message, path);
+        return new ApiErrorResponse(LocalDateTime.now(ZoneId.of("Asia/Seoul")), status, error, message, path);
     }
 }

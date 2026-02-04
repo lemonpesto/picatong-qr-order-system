@@ -33,6 +33,6 @@ public class ItemController {
         model.addAttribute("returnUrl", "/items");
         model.addAttribute("showHistory", true);
         
-        return "/user/items";
+        return "user/items";
     }
 }
