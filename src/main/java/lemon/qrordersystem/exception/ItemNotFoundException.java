@@ -6,6 +6,6 @@ package lemon.qrordersystem.exception;
 public class ItemNotFoundException extends BusinessException {
 
     public ItemNotFoundException(Long id) {
-        super("존재하지 않는 아이템입니다. id=" + id);
+        super(ErrorCode.NOT_FOUND, "존재하지 않는 아이템입니다. id=" + id);
     }
 }

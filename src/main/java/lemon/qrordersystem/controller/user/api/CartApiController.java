@@ -15,6 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/cart")
 public class CartApiController {
 
     private final CartService cartService;
@@ -23,7 +24,7 @@ public class CartApiController {
     /**
      * 장바구니에 메뉴 추가
      */
-    @PostMapping("/cart/add")
+    @PostMapping("/items")
     public ResponseEntity<CartSummaryDto> addToCart(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody AddToCartRequest req) {
@@ -41,7 +42,7 @@ public class CartApiController {
     /**
      * 장바구니 요약 정보 조회
      */
-    @GetMapping("/cart/summary")
+    @GetMapping
     public ResponseEntity<CartSummaryDto> getCartSummary(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
@@ -52,10 +53,10 @@ public class CartApiController {
     /**
      * 장바구니 아이템 수량 변경
      */
-    @PostMapping("/cart/update")
+    @PatchMapping("/items/{itemId}")
     public ResponseEntity<CartSummaryDto> updateCart(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam Long itemId,
+            @PathVariable Long itemId,
             @RequestBody Map<String, Integer> body) {
 
         Long tableId = userDetails.getId();
@@ -71,10 +72,10 @@ public class CartApiController {
     /**
      * 장바구니 아이템 삭제
      */
-    @DeleteMapping("/cart/delete")
+    @DeleteMapping("/items/{itemId}")
     public ResponseEntity<CartSummaryDto> deleteCartItem(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam Long itemId) {
+            @PathVariable Long itemId) {
 
         Long tableId = userDetails.getId();
         cartService.deleteItem(tableId, itemId);

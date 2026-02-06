@@ -22,9 +22,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers(
                                 "/ws/**",           // WebSocket
-                                "/cart/**",         // 장바구니 API
+                                "/api/cart/**",     // 장바구니 API
                                 "/orders/**",       // 주문 API (사용자)
-                                "/payment/**",       // 결제 API
+                                "/payments/**",     // 결제 API
                                 "/admin/orders/**",
                                 "/admin/kitchen/orders/**"
                         )

@@ -11,14 +11,15 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    @Value("${app.allowed-origins}")
-    private String allowedOrigins;
+//    @Value("${app.allowed-origins}")
+//    private String allowedOrigins;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // WebSocket 엔드포인트 등록
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns(allowedOrigins.split(","))
+//                .setAllowedOriginPatterns(allowedOrigins.split(","))
+                .setAllowedOriginPatterns("*")
                 .withSockJS();
     }
 

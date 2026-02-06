@@ -22,7 +22,7 @@
     <div class="user-nav__right">
         <a class="user-nav__link"
            th:if="${returnUrl != null}"
-           th:href="@{/orders/history(returnUrl=${returnUrl})}">
+           th:href="@{/orders(returnUrl=${returnUrl})}">
             주문내역
         </a>
         <div class="user-nav__table">

@@ -76,9 +76,12 @@
 
 <!-- 주문하기 버튼 -->
 <div id="bottom-bar" th:if="${!#lists.isEmpty(cartItems)}" class="user-bottombar">
-    <a th:href="@{/orders/create}" id="order" class="u-btn u-btn--primary user-bottombar__btn">
-        총&nbsp;<span id="total-amount" th:text="${#numbers.formatInteger(summary.totalAmount, 0, 'COMMA')}">0</span>원 주문하기
-    </a>
+    <form th:href="@{/orders}" method="post" class="u-btn u-btn--primary user-bottombar__btn">
+        <button type="submit" id="order" class="u-btn u-btn--primary">
+            총&nbsp;<span id="total-amount" th:text="${#numbers.formatInteger(summary.totalAmount, 0, 'COMMA')}">0</span>원 주문하기
+        </button>
+    </form>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
@@ -218,8 +221,8 @@
     };
 
     const updateQty = async (itemId, qty) => {
-        const res = await fetch(`/cart/update?itemId=${encodeURIComponent(itemId)}`, {
-            method: 'POST',
+        const res = await fetch(`api/cart/items/${encodeURIComponent(itemId)}`, {
+            method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ qty }),
         });
@@ -227,7 +230,7 @@
     };
 
     const deleteItem = async (itemId) => {
-        const res = await fetch(`/cart/delete?itemId=${encodeURIComponent(itemId)}`, { method: 'DELETE' });
+        const res = await fetch(`api/cart/items/${encodeURIComponent(itemId)}`, { method: 'DELETE' });
         if (!res.ok) throw new Error(await res.text());
     };
 

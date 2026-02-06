@@ -38,15 +38,13 @@
 
     <section class="user-center__actions">
         <div class="user-bottombar">
-            <form th:action="@{/payment/cancel}" method="post" style="flex: 1;">
-                <input type="hidden" name="orderId" th:value="${orderId}" />
+            <form th:action="@{/payments/{orderId}/cancel(orderId=${orderId})}" method="post" style="flex: 1;">
                 <button type="submit" class="u-btn btn--cancel user-bottombar__btn" style="flex: 1;">
                     주문 취소
                 </button>
             </form>
 
-            <form th:action="@{/payment}" class="payment-form" method="post" style="flex: 2;">
-                <input type="hidden" name="orderId" th:value="${orderId}" />
+            <form th:action="@{/payments/{orderId}/confirm(orderId=${orderId})}" class="payment-form" method="post" style="flex: 2;">
                 <button type="submit" class="u-btn u-btn--primary user-bottombar__btn">
                     총&nbsp;<span th:text="${#numbers.formatInteger(summary.totalAmount, 0, 'COMMA')}">0</span>원 입금 완료
                 </button>

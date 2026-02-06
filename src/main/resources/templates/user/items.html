@@ -322,7 +322,7 @@
         if (!currItemId) return;
 
         try {
-            const res = await fetch("/cart/add", {
+            const res = await fetch("api/cart/items", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({itemId: currItemId, quantity: qty}),
@@ -364,7 +364,7 @@
 
     async function refreshCartSummaryFromServer() {
         try {
-            const res = await fetch("/cart/summary");
+            const res = await fetch("api/cart");
             if (!res.ok) return;
             const data = await res.json();
             renderCartButton(data);

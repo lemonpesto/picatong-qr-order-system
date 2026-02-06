@@ -25,6 +25,7 @@ public class UserPageExceptionHandler {
                                 RedirectAttributes redirectAttrs) {
 
         redirectAttrs.addFlashAttribute("errorMessage", ex.getMessage());
+
         return "redirect:" + pickSafeRedirectTarget(req, "/items");
     }
 
@@ -63,6 +64,16 @@ public class UserPageExceptionHandler {
         return "redirect:" + pickSafeRedirectTarget(req, "/items");
     }
 
+    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
+    public String handleIllegalState(RuntimeException ex,
+                                     HttpServletRequest req,
+                                     RedirectAttributes redirectAttrs) {
+
+        redirectAttrs.addFlashAttribute("errorMessage", ex.getMessage());
+        return "redirect:" + pickSafeRedirectTarget(req, "/items");
+    }
+
+
     // ===== 예상 못한 예외 =====
 
     @ExceptionHandler(Exception.class)
@@ -87,10 +98,9 @@ public class UserPageExceptionHandler {
         String referer = sanitizeRefererToRelativeUrl(req.getHeader("Referer"));
         if (referer != null) return referer;
 
-        // URI 기반 기본값(결제/주문 쪽에서 터지면 /cart가 더 자연스러움)
         String uri = req.getRequestURI();
         if (uri != null) {
-            if (uri.startsWith("/payment") || uri.startsWith("/orders")) return "/cart";
+            if (uri.startsWith("/payments") || uri.startsWith("/orders")) return "/cart";
             if (uri.startsWith("/cart")) return "/cart";
         }
         return defaultTarget;

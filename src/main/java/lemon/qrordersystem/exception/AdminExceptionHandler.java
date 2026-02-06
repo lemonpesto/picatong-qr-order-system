@@ -31,6 +31,20 @@ public class AdminExceptionHandler {
         return "redirect:" + resolveRedirectTarget(request);
     }
 
+    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
+    public Object handleIllegalState(RuntimeException e,
+                                     HttpServletRequest request,
+                                     RedirectAttributes redirectAttrs) {
+
+        if (isAjaxRequest(request)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("success", false, "message", e.getMessage()));
+        }
+
+        redirectAttrs.addFlashAttribute("errorMessage", e.getMessage());
+        return "redirect:" + resolveRedirectTarget(request);
+    }
+
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public Object handleTypeMismatch(MethodArgumentTypeMismatchException e,
                                      HttpServletRequest request,
