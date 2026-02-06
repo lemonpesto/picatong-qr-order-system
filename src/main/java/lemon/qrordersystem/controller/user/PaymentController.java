@@ -97,7 +97,6 @@ public class PaymentController {
     @GetMapping("/confirm/success")
     public String confirmSuccess(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long orderId,
             Model model) {
 
         model.addAttribute("navTitle", "결제확인");

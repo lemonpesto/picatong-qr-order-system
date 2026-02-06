@@ -65,7 +65,7 @@ public class Order {
 
     /** 관리자: 입금 확인 */
     public void confirmPayment() {
-        if (this.status != OrderStatus.PAYMENT_PENDING || this.status != OrderStatus.PAYMENT_CONFIRM_WAITING) {
+        if (this.status != OrderStatus.PAYMENT_PENDING && this.status != OrderStatus.PAYMENT_CONFIRM_WAITING) {
             throw new IllegalStateException("입금 확인 가능한 상태가 아닙니다.");
         }
         this.status = OrderStatus.COOKING;

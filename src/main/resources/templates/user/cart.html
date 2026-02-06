@@ -76,7 +76,7 @@
 
 <!-- 주문하기 버튼 -->
 <div id="bottom-bar" th:if="${!#lists.isEmpty(cartItems)}" class="user-bottombar">
-    <form th:href="@{/orders}" method="post" class="u-btn u-btn--primary user-bottombar__btn">
+    <form th:action="@{/orders}" method="post" class="u-btn u-btn--primary user-bottombar__btn">
         <button type="submit" id="order" class="u-btn u-btn--primary">
             총&nbsp;<span id="total-amount" th:text="${#numbers.formatInteger(summary.totalAmount, 0, 'COMMA')}">0</span>원 주문하기
         </button>
