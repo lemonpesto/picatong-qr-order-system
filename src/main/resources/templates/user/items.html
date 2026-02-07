@@ -74,7 +74,7 @@
 </div>
 
 <!-- 장바구니 보기 버튼 -->
-<div class="user-bottombar">
+<div id="cart-bottombar" class="user-bottombar" th:classappend="${isOrdering} ? ' u-hidden' : ''">
     <a href="/cart" id="view-cart" class="u-btn u-btn--primary user-bottombar__btn u-hidden">장바구니 보기</a>
 </div>
 
@@ -124,6 +124,7 @@
 
 <script th:inline="javascript">
     const tableId = /*[[${tableId}]]*/ null;
+    let cartOrdering = /*[[${isOrdering}]]*/ false;
 
     let currItemId = null;
     let currPrice = 0;
@@ -137,6 +138,7 @@
         bindCategoryScroll();
         bindBottomSheet();
 
+        toggleCartBar(cartOrdering);
         refreshCartSummaryFromServer();
 
         connectNavTopic();
@@ -195,6 +197,10 @@
                 if (!evt || evt.type !== "CART_UPDATED") return;
 
                 const summary = evt.data?.summary;
+                if (evt.data?.ordering != null) {
+                    cartOrdering = evt.data.ordering;
+                    toggleCartBar(cartOrdering);
+                }
                 if (summary) renderCartButton(summary);
                 else refreshCartSummaryFromServer();
             });
@@ -351,10 +357,11 @@
 
     function renderCartButton(summary) {
         const viewCart = document.getElementById("view-cart");
+        if (!viewCart) return;
         const totalQuantity = Number(summary?.totalQuantity ?? 0);
         const totalAmount = Number(summary?.totalAmount ?? 0);
 
-        if (totalQuantity > 0) {
+        if (!cartOrdering && totalQuantity > 0) {
             viewCart.textContent = `총 ${formatComma(totalAmount)}원 장바구니 보기 (${totalQuantity})`;
             viewCart.classList.remove("u-hidden");
         } else {
@@ -363,6 +370,7 @@
     }
 
     async function refreshCartSummaryFromServer() {
+        if (!document.getElementById("view-cart")) return;
         try {
             const res = await fetch("api/cart");
             if (!res.ok) return;
@@ -371,6 +379,13 @@
         } catch (e) {
             console.error(e);
         }
+    }
+
+    function toggleCartBar(ordering) {
+        const bar = document.getElementById("cart-bottombar");
+        if (!bar) return;
+        if (ordering) bar.classList.add("u-hidden");
+        else bar.classList.remove("u-hidden");
     }
 
     function safeJson(str) {

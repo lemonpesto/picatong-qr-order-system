@@ -4,7 +4,8 @@ import java.util.List;
 
 public record CartSyncDto(
         CartSummaryDto summary,
-        List<CartLineDto> items) {
+        List<CartLineDto> items,
+        boolean ordering) {
 
     public record CartLineDto(
             Long itemId,
@@ -12,5 +13,6 @@ public record CartSyncDto(
             int unitPrice,
             int quantity,
             int lineAmount
-    ) {}
+    ) {
+    }
 }

@@ -226,8 +226,7 @@ public class CartService {
         );
 
         if (cartOpt.isEmpty()) {
-            return new CartSyncDto(new CartSummaryDto(0, 0), List.of());
-        }
+            return new CartSyncDto(new CartSummaryDto(0, 0), List.of(), false);        }
 
         Cart cart = cartOpt.get();
 
@@ -247,6 +246,6 @@ public class CartService {
                 lines.stream().mapToInt(CartSyncDto.CartLineDto::lineAmount).sum()
         );
 
-        return new CartSyncDto(summary, lines);
-    }
+        boolean ordering = cart.getStatus() == CartStatus.ORDERING;
+        return new CartSyncDto(summary, lines, ordering);    }
 }

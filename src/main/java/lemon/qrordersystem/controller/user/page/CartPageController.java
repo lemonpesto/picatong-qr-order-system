@@ -46,6 +46,7 @@ public class CartPageController {
         model.addAttribute("navBack", "/items");
         model.addAttribute("returnUrl", "/cart");
         model.addAttribute("tableNum", userDetails.getTableNum());
+        model.addAttribute("tableId", userDetails.getId());
 
         return "user/cart";
     }

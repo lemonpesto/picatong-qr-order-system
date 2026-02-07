@@ -5,6 +5,7 @@ import lemon.qrordersystem.entity.order.Order;
 import lemon.qrordersystem.security.CustomUserDetails;
 import lemon.qrordersystem.service.CartService;
 import lemon.qrordersystem.service.OrderService;
+import lemon.qrordersystem.service.WebSocketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -18,6 +19,7 @@ public class PaymentController {
     
     private final CartService cartService;
     private final OrderService orderService;
+    private final WebSocketService ws;
 
     /**
      * 결제 페이지
@@ -57,6 +59,7 @@ public class PaymentController {
 
         // 장바구니 상태: ORDERING -> ACTIVE
         cartService.unlockCartToActive(tableId);
+        ws.tableCartUpdated(tableId, cartService.buildCartSyncDto(tableId));
 
         return "redirect:/cart";
     }
