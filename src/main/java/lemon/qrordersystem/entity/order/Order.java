@@ -58,7 +58,7 @@ public class Order {
     /** 고객: 입금완료 버튼 */
     public void requestPaymentConfirm() {
         if (this.status != OrderStatus.PAYMENT_PENDING) {
-            throw new IllegalStateException("입금완료 처리 가능한 상태가 아닙니다.");
+            throw new IllegalStateException("이미 처리된 주문입니다.");
         }
         this.status = OrderStatus.PAYMENT_CONFIRM_WAITING;
     }

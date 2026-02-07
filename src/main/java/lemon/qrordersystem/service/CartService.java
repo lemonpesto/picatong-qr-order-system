@@ -205,11 +205,14 @@ public class CartService {
      */
     public void clearCart(Long tableId) {
         Optional<Cart> cartOpt = cartRepository
-                .findByTable_IdAndStatus(tableId, CartStatus.ACTIVE);
+                .findFirstByTable_IdAndStatusInOrderByIdDesc(
+                        tableId, List.of(CartStatus.ACTIVE, CartStatus.ORDERING)
+                );
 
         if (cartOpt.isPresent()) {
             Cart cart = cartOpt.get();
             cartItemRepository.deleteByCartId(cart.getId());
+            cart.getCartItems().clear();
         }
     }
 
