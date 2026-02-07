@@ -27,13 +27,9 @@
 </div>
 
 <div class="user-callouts">
-    <!--    <div class="user-callout">-->
-    <!--        <i class="fa-solid fa-bullhorn user-callout__icon"></i>-->
-    <!--        <span class="user-callout__text">최초 주문 시 안주를 포함하여 10,000원 이상 주문 필수입니다!</span>-->
-    <!--    </div>-->
     <div class="user-callout">
         <i class="fa-solid fa-bullhorn user-callout__icon"></i>
-        <span class="user-callout__text">23:00에 라스트오더</span>
+        <span class="user-callout__text">테이블당 메인 메뉴 1개 이상 주문 필수입니다!</span>
     </div>
 </div>
 
@@ -179,6 +175,9 @@
                 if (evt.type === "REDIRECT" && evt.data?.url) {
                     if (evt.data?.sourceSessionId && sessionId && evt.data.sourceSessionId === sessionId) {
                         return;
+                    }
+                    if (evt.data?.message) {
+                        showToast(evt.data.message);
                     }
                     window.location.replace(evt.data.url);
                     return;

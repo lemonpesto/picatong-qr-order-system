@@ -137,6 +137,9 @@
             if (evt.data?.sourceSessionId && sessionId && evt.data.sourceSessionId === sessionId) {
                 return;
             }
+            if (evt.data?.message) {
+                showToast(evt.data.message);
+            }
             window.location.replace(evt.data.url);
             return;
         }

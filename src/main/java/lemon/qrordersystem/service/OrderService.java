@@ -83,9 +83,10 @@ public class OrderService {
         order.setTotals(totalAmount, totalQuantity);
         Order savedOrder = orderRepository.save(order);
 
-        // 트랜잭션 커밋 후 WebSocket 알림 (sendAfterCommit 사용)
+        // 트랜잭션 커밋 후 WebSocket 알림
         ws.adminConfirmReload();
-        ws.tableRedirect(tableId, sessionId, "/items", "같은 테이블에서 주문이 시작되어 장바구니 접근이 제한됩니다.");
+        ws.tableRedirect(tableId, sessionId, "/items", "현재 주문 중입니다.");
+
         return savedOrder;
     }
 
