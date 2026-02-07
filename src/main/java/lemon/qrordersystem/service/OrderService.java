@@ -85,7 +85,7 @@ public class OrderService {
 
         // 트랜잭션 커밋 후 WebSocket 알림
         ws.adminConfirmReload();
-        ws.tableRedirect(tableId, sessionId, "/items", "현재 주문 중입니다.");
+        ws.tableRedirect(tableId, sessionId, "/items", "주문이 시작되었습니다.");
 
         return savedOrder;
     }

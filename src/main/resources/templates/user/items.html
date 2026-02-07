@@ -143,6 +143,12 @@
         connectNavTopic();
         connectCartTopic();
         connectItemUpdateTopic();
+
+        const pendingToast = sessionStorage.getItem('pending-toast');
+        if (pendingToast) {
+            sessionStorage.removeItem('pending-toast');
+            showToast(pendingToast);
+        }
     });
 
     window.addEventListener("beforeunload", () => {
@@ -177,7 +183,7 @@
                         return;
                     }
                     if (evt.data?.message) {
-                        showToast(evt.data.message);
+                        sessionStorage.setItem('pending-toast', evt.data.message);
                     }
                     window.location.replace(evt.data.url);
                     return;
