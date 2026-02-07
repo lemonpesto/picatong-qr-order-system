@@ -35,7 +35,8 @@ public class OrderService {
     // ============================================================================
 
     /**
-     * 주문 생성 (장바구니 -> 주문)
+     * 주문 생성
+     * - 장바구니 잠금
      */
     @Transactional
     public Order createOrder(Long tableId) {
@@ -104,7 +105,9 @@ public class OrderService {
     // ============================================================================
 
     /**
-     * 입금 완료 (주문 상태: 입금 중 -> 입금 확인 대기 중)
+     * 입금 완료
+     * - 주문 상태: '입금 확인 대기 중'으로 변경
+     * - 장바구니 잠금 해제
      */
     @Transactional
     public void requestPaymentConfirm(Long orderId, Long tableId) {
@@ -118,18 +121,13 @@ public class OrderService {
 
         order.requestPaymentConfirm();
 
-        // 1. 장바구니 상태 ACTIVE로 바꾸기
-        cartService.unlockCartToActive(tableId);
-
-        // 2. 입금 완료 요청 시 장바구니 비우기
-        cartService.clearCart(tableId);
-
         // 트랜잭션 커밋 후 WebSocket 알림
         ws.adminConfirmReload();
     }
 
     /**
-     * 주문 취소 (입금 중 상태일 때만 가능)
+     * 주문 취소
+     * - 주문 삭제
      */
     @Transactional
     public void deleteOrder(Long orderId, Long tableId) {
@@ -143,7 +141,7 @@ public class OrderService {
 
         // 상태 체크: PAYMENT_PENDING 상태만 삭제 가능
         if (order.getStatus() != OrderStatus.PAYMENT_PENDING) {
-            throw new BusinessException("취소할 수 없는 주문입니다. (이미 입금 확인 요청됨)");
+            throw new BusinessException("취소할 수 없는 주문입니다.");
         }
 
         // 주문 삭제
@@ -152,7 +150,7 @@ public class OrderService {
 
         // 트랜잭션 커밋 후 WebSocket 알림
         ws.adminConfirmReload();
-        ws.tableInfo(tableId, "주문이 취소되어 장바구니 이용이 가능합니다.");
+        ws.tableInfo(tableId, "주문이 취소되었습니다.");
     }
 
     // ============================================================================
@@ -160,7 +158,10 @@ public class OrderService {
     // ============================================================================
 
     /**
-     * 입금 확인 (PAYMENT_CONFIRM_WAITING -> COOKING)
+     * 입금 확인
+     * - 주문 상태 '조리 중'으로 변경
+     * - 장바구니 잠금 해제
+     * - 장바구니 비우기
      */
     @Transactional
     public void confirmPayment(Long orderId) {
@@ -170,6 +171,8 @@ public class OrderService {
         Long tableId = order.getTable().getId();
 
         order.confirmPayment();
+        cartService.unlockCartToActive(tableId);
+        cartService.clearCart(tableId);
 
         // 트랜잭션 커밋 후 WebSocket 알림
         ws.adminServeReload();
@@ -179,6 +182,9 @@ public class OrderService {
 
     /**
      * 주문 취소
+     * - 주문 상태 CANCELLED로 변경
+     * - 장바구니 잠금 해제
+     * - 장바구니 비우기
      */
     @Transactional
     public void cancelOrder(Long orderId) {
@@ -188,15 +194,12 @@ public class OrderService {
         Long tableId = order.getTable().getId();
 
         order.cancel();
-
-        // 1. 장바구니 상태 ACTIVE로 바꾸기
         cartService.unlockCartToActive(tableId);
-
-        // 2. 주문 취소 후 장바구니 비우기
         cartService.clearCart(tableId);
 
         // 트랜잭션 커밋 후 WebSocket 알림
         ws.paymentRedirect(tableId, orderId, "/payments/confirm/cancel", "관리자에 의해 주문이 취소되었습니다.");
+        ws.tableInfo(tableId, "주문이 취소되었습니다.");
     }
 
     // ============================================================================
