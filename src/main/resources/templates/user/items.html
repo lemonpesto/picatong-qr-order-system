@@ -127,6 +127,7 @@
 <script th:inline="javascript">
     const tableId = /*[[${tableId}]]*/ null;
     let cartOrdering = /*[[${isOrdering}]]*/ false;
+    const sessionId = /*[[${sessionId}]]*/ null;
 
     let currItemId = null;
     let currPrice = 0;
@@ -176,6 +177,9 @@
                 if (!evt) return;
 
                 if (evt.type === "REDIRECT" && evt.data?.url) {
+                    if (evt.data?.sourceSessionId && sessionId && evt.data.sourceSessionId === sessionId) {
+                        return;
+                    }
                     window.location.replace(evt.data.url);
                     return;
                 }

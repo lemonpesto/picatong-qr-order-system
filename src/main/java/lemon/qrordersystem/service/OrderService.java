@@ -39,8 +39,7 @@ public class OrderService {
      * - 장바구니 잠금
      */
     @Transactional
-    public Order createOrder(Long tableId) {
-        // 장바구니 가져오기 (장바구니 비어 있으면 주문 생성 불가)
+    public Order createOrder(Long tableId, String sessionId) {        // 장바구니 가져오기 (장바구니 비어 있으면 주문 생성 불가)
         Cart cart = cartService.getOrCreateCart(tableId);
         List<CartItem> cartItems = cart.getCartItems();
 
@@ -86,18 +85,17 @@ public class OrderService {
 
         // 트랜잭션 커밋 후 WebSocket 알림 (sendAfterCommit 사용)
         ws.adminConfirmReload();
-        ws.tableRedirect(tableId, "/items", "같은 테이블에서 주문이 시작되어 장바구니 접근이 제한됩니다.");
-
+        ws.tableRedirect(tableId, sessionId, "/items", "같은 테이블에서 주문이 시작되어 장바구니 접근이 제한됩니다.");
         return savedOrder;
     }
 
     @Transactional
-    public Order getOrCreatePaymentPendingOrder(Long tableId) {
+    public Order getOrCreatePaymentPendingOrder(Long tableId, String sessionId) {
 
         // 1) 이미 미결제 주문이 있으면 새로 만들지 말고 그대로 반환
         return orderRepository
                 .findFirstByTable_IdAndStatusOrderByCreatedAtDesc(tableId, OrderStatus.PAYMENT_PENDING)
-                .orElseGet(() -> createOrder(tableId));
+                .orElseGet(() -> createOrder(tableId, sessionId));
     }
 
     // ============================================================================

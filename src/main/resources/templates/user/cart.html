@@ -90,6 +90,7 @@
 
 <script th:inline="javascript">
     const tableId = /*[[${tableId}]]*/ null;
+    const sessionId = /*[[${sessionId}]]*/ null;
 
     const WS = {
         url: '/ws',
@@ -133,6 +134,9 @@
         if (!evt) return;
 
         if (evt.type === 'REDIRECT' && evt.data?.url) {
+            if (evt.data?.sourceSessionId && sessionId && evt.data.sourceSessionId === sessionId) {
+                return;
+            }
             window.location.replace(evt.data.url);
             return;
         }

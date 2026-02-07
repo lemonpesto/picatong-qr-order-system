@@ -90,10 +90,10 @@ public class WebSocketService {
                 new CartEvent("CART_UPDATED", payload)));
     }
 
-    public void tableRedirect(Long tableId, String url, String message) {
+    public void tableRedirect(Long tableId, String sourceSessionId, String url, String message) {
         sendAfterCommit(() -> messagingTemplate.convertAndSend(
                 topicTableNav(tableId),
-                new SimpleEvent("REDIRECT", new RedirectPayload(url, message))));
+                new SimpleEvent("REDIRECT", new RedirectPayload(url, message, sourceSessionId))));
     }
 
     public void tableInfo(Long tableId, String message) {
@@ -162,7 +162,7 @@ public class WebSocketService {
     public record SimpleEvent<T>(String type, T data) {
     }
 
-    public record RedirectPayload(String url, String message) {
+    public record RedirectPayload(String url, String message, String sourceSessionId) {
     }
 
     public record MessagePayload(String message) {

@@ -1,5 +1,6 @@
 package lemon.qrordersystem.controller.user;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lemon.qrordersystem.entity.order.Order;
 import lemon.qrordersystem.security.CustomUserDetails;
 import lemon.qrordersystem.service.CartService;
@@ -36,13 +37,15 @@ public class OrderController {
      */
     @PostMapping
     public String orderCreate(
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest request) {
 
         Long tableId = userDetails.getId();
+        String sessionId = request.getSession().getId();
 
         // PAYMENT_PENDING 있으면 그걸로 결제 계속하기
-        Order order = orderService.getOrCreatePaymentPendingOrder(tableId); // cart는 ORDERING 상태로 전이 && (order 생성 or get)
-        return "redirect:/payments/" + order.getId();
+        Order order = orderService.getOrCreatePaymentPendingOrder(tableId, sessionId); // cart는 ORDERING 상태로 전이 && (order 생성 or get)
+         return "redirect:/payments/" + order.getId();
     }
 
     /**

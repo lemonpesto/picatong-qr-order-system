@@ -1,5 +1,6 @@
 package lemon.qrordersystem.controller.user.page;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lemon.qrordersystem.dto.CartSummaryDto;
 import lemon.qrordersystem.entity.cart.Cart;
 import lemon.qrordersystem.entity.cart.CartItem;
@@ -26,6 +27,7 @@ public class CartPageController {
     @GetMapping("/cart")
     public String cart(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest request,
             Model model) {
 
         Long tableId = userDetails.getId();
@@ -47,6 +49,7 @@ public class CartPageController {
         model.addAttribute("returnUrl", "/cart");
         model.addAttribute("tableNum", userDetails.getTableNum());
         model.addAttribute("tableId", userDetails.getId());
+        model.addAttribute("sessionId", request.getSession().getId());
 
         return "user/cart";
     }

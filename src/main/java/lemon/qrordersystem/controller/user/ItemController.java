@@ -1,5 +1,6 @@
 package lemon.qrordersystem.controller.user;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lemon.qrordersystem.entity.cart.Cart;
 import lemon.qrordersystem.entity.cart.CartStatus;
 import lemon.qrordersystem.entity.item.Category;
@@ -25,6 +26,7 @@ public class ItemController {
     @GetMapping("/items")
     public String menu(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest request,
             Model model) {
 
         List<Item> items = itemService.getAllItems();
@@ -40,6 +42,7 @@ public class ItemController {
         model.addAttribute("returnUrl", "/items");
         model.addAttribute("showHistory", true);
         model.addAttribute("isOrdering", isOrdering);
+        model.addAttribute("sessionId", request.getSession().getId());
         
         return "user/items";
     }
