@@ -150,7 +150,8 @@ public class OrderService {
 
         // 트랜잭션 커밋 후 WebSocket 알림
         ws.adminConfirmReload();
-        ws.tableInfo(tableId, "주문이 취소되었습니다.");
+        ws.tableRedirect(tableId, "/items", "주문이 취소되었습니다.");
+
     }
 
     // ============================================================================
@@ -178,6 +179,7 @@ public class OrderService {
         ws.adminServeReload();
         ws.adminKitchenReload();
         ws.paymentRedirect(tableId, orderId, "/payments/confirm/success", "입금이 확인되었습니다.");
+        ws.tableRedirect(tableId, "/items", "주문이 접수되었습니다.");
     }
 
     /**
@@ -199,7 +201,8 @@ public class OrderService {
 
         // 트랜잭션 커밋 후 WebSocket 알림
         ws.paymentRedirect(tableId, orderId, "/payments/confirm/cancel", "관리자에 의해 주문이 취소되었습니다.");
-        ws.tableInfo(tableId, "주문이 취소되었습니다.");
+        ws.tableRedirect(tableId, "/items", "주문이 취소되었습니다.");
+
     }
 
     // ============================================================================

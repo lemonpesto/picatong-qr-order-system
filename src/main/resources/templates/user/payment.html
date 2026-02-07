@@ -55,6 +55,31 @@
 
 <script th:src="@{/js/toast.js}"></script>
 <script>
+    const tableId = /*[[${tableId}]]*/ null;
+
+    let navStomp = null;
+
+    function connectNavTopic() {
+        if (!tableId) return;
+
+        const socket = new SockJS("/ws");
+        navStomp = Stomp.over(socket);
+        navStomp.debug = null;
+
+        navStomp.connect({}, () => {
+            navStomp.subscribe(`/topic/tables/${tableId}/nav`, (frame) => {
+                const evt = safeJson(frame.body);
+                if (!evt) return;
+
+                if (evt.type === "REDIRECT" && evt.data?.url) {
+                    showToast(evt.data.message);
+                    window.location.replace(evt.data.url);
+                    return;
+                }
+            });
+        });
+    }
+
     window.addEventListener("DOMContentLoaded", () => {
         const account = document.getElementById("account-number");
         const toast = document.getElementById("toast");
@@ -98,6 +123,7 @@
                 setTimeout(() => toast.classList.remove("show"), 2000);
             }
         });
+        connectNavTopic();
     });
 </script>
 </body>

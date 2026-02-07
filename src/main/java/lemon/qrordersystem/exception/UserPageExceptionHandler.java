@@ -95,6 +95,9 @@ public class UserPageExceptionHandler {
         String returnUrl = sanitizeRelativeUrl(req.getParameter("returnUrl"));
         if (returnUrl != null) return returnUrl;
 
+        String method = req.getMethod();
+        if (method != null && !"GET".equalsIgnoreCase(method)) return defaultTarget;
+
         String referer = sanitizeRefererToRelativeUrl(req.getHeader("Referer"));
         if (referer != null) return referer;
 
