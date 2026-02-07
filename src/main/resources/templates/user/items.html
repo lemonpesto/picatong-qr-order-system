@@ -175,7 +175,7 @@
 
         navStomp.connect({}, () => {
             navStomp.subscribe(`/topic/tables/${tableId}/nav`, (frame) => {
-                const evt = safeJson(frame.body);
+                const evt = ApiUtils.safeJson(frame.body);
                 if (!evt) return;
 
                 if (evt.type === "REDIRECT" && evt.data?.url) {
@@ -204,7 +204,7 @@
 
         cartStomp.connect({}, () => {
             cartStomp.subscribe(`/topic/tables/${tableId}/cart`, (frame) => {
-                const evt = safeJson(frame.body);
+                const evt = ApiUtils.safeJson(frame.body);
                 if (!evt || evt.type !== "CART_UPDATED") return;
 
                 const summary = evt.data?.summary;
@@ -225,7 +225,7 @@
 
         itemUpdateStomp.connect({}, () => {
             itemUpdateStomp.subscribe("/topic/items/updated", (frame) => {
-                const evt = safeJson(frame.body);
+                const evt = ApiUtils.safeJson(frame.body);
                 if (!evt || evt.type !== "ITEM_UPDATED") return;
 
                 const it = evt.data;
@@ -352,7 +352,7 @@
 
             const maybeJson = await res.text();
             if (maybeJson) {
-                const parsed = safeJson(maybeJson);
+                const parsed = ApiUtils.safeJson(maybeJson);
                 if (parsed && (parsed.totalAmount != null || parsed.totalQuantity != null)) {
                     renderCartButton(parsed);
                 }
@@ -397,14 +397,6 @@
         if (!bar) return;
         if (ordering) bar.classList.add("u-hidden");
         else bar.classList.remove("u-hidden");
-    }
-
-    function safeJson(str) {
-        try {
-            return JSON.parse(str);
-        } catch {
-            return null;
-        }
     }
 
     function formatComma(n) {

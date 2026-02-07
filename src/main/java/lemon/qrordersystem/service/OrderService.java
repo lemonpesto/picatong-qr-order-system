@@ -140,7 +140,7 @@ public class OrderService {
 
         // 상태 체크: PAYMENT_PENDING 상태만 삭제 가능
         if (order.getStatus() != OrderStatus.PAYMENT_PENDING) {
-            throw new BusinessException("취소할 수 없는 주문입니다.");
+            throw new BusinessException("이미 처리된 주문입니다.");
         }
 
         // 주문 삭제

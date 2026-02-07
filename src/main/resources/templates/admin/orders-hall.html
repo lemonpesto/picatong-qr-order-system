@@ -185,13 +185,6 @@
     /* =========================================================
      *  Utils
      * ========================================================= */
-    const safeJson = (str) => {
-        try {
-            return JSON.parse(str);
-        } catch {
-            return null;
-        }
-    };
 
     const isConfirmTab = () => activeTab === 'confirm';
     const isServeTab = () => activeTab === 'serve';
@@ -236,7 +229,7 @@
 
     const subscribeReloadTopics = () => {
         const onReload = (message) => {
-            const evt = safeJson(message.body);
+            const evt = ApiUtils.safeJson(message.body);
             if (evt?.type === 'RELOAD') window.location.reload();
         };
 
@@ -256,7 +249,7 @@
 
                 // 주방->서빙 조리완료 동기화
                 stompClient.subscribe(WS.topics.orderProgress(orderItemId), (message) => {
-                    const evt = safeJson(message.body);
+                    const evt = ApiUtils.safeJson(message.body);
                     if (!evt) return;
 
                     updateOrderItemCooked(evt.orderId, evt.orderItemId, evt.checked);
@@ -264,7 +257,7 @@
 
                 // 서빙 페이지 내 실시간 동기화
                 stompClient.subscribe(WS.topics.serveProgress(orderItemId), (message) => {
-                    const evt = safeJson(message.body);
+                    const evt = ApiUtils.safeJson(message.body);
                     if (!evt) return;
 
                     updateOrderItemServed(evt.orderId, evt.orderItemId, evt.checked);
@@ -283,7 +276,7 @@
                 subscribedComplete.add(orderId);
 
                 stompClient.subscribe(WS.topics.serveComplete(orderId), (message) => {
-                    const evt = safeJson(message.body);
+                    const evt = ApiUtils.safeJson(message.body);
                     if (!evt) return;
 
                     const doneOrderId = evt?.data?.orderId;
