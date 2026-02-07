@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title th:text="${pageTitle}">관리자 페이지</title>
 
-    <link rel="stylesheet" th:href="@{/css/admin-unified.css}" />
+    <link rel="stylesheet" th:href="@{/css/admin-unified.css}"/>
     <script src="https://kit.fontawesome.com/a3ff865f92.js" crossorigin="anonymous"></script>
 </head>
 
@@ -79,7 +79,8 @@
 
             <!-- 입금 확인 / 주문 취소 -->
             <div class="admin-order__actions admin-order__actions--confirm">
-                <form th:action="@{/admin/orders/{orderId}/cancel(orderId=${order.id})}" method="post" style="display:inline;">
+                <form th:action="@{/admin/orders/{orderId}/cancel(orderId=${order.id})}" method="post"
+                      style="display:inline;">
                     <button type="submit"
                             class="btn js-btn-cancel"
                             th:classappend="${order.status.name() == 'PAYMENT_PENDING'} ? ' btn--cancel--pending' : ' btn--cancel--after'"
@@ -88,7 +89,8 @@
                     </button>
                 </form>
 
-                <form th:action="@{/admin/orders/{orderId}/confirm(orderId=${order.id})}" method="post" style="display:inline;">
+                <form th:action="@{/admin/orders/{orderId}/confirm(orderId=${order.id})}" method="post"
+                      style="display:inline;">
                     <button type="submit"
                             class="btn js-btn-confirm"
                             th:classappend="${order.status.name() == 'PAYMENT_PENDING'} ? ' btn--confirm--pending' : ' btn--confirm--waiting'"
@@ -113,7 +115,8 @@
 
             <div class="admin-card__header admin-order__header">
                 <span class="admin-order__table" th:text="'테이블 ' + ${order.table.tableNum}">테이블 1</span>
-                <span class="admin-card__meta" th:text="${#temporals.format(order.createdAt, 'HH:mm:ss')}">12:34:56</span>
+                <span class="admin-card__meta"
+                      th:text="${#temporals.format(order.createdAt, 'HH:mm:ss')}">12:34:56</span>
             </div>
 
             <ul class="admin-checklist">
@@ -152,6 +155,7 @@
 
 <script th:src="@{/js/admin-sidebar.js}"></script>
 <script th:src="@{/js/toast.js}"></script>
+<script th:src="@{/js/api.js}"></script>
 <!-- 공통 스크립트 끝 -->
 
 <script th:inline="javascript">
@@ -182,14 +186,21 @@
      *  Utils
      * ========================================================= */
     const safeJson = (str) => {
-        try { return JSON.parse(str); } catch { return null; }
+        try {
+            return JSON.parse(str);
+        } catch {
+            return null;
+        }
     };
 
     const isConfirmTab = () => activeTab === 'confirm';
-    const isServeTab   = () => activeTab === 'serve';
+    const isServeTab = () => activeTab === 'serve';
 
     const disconnectQuietly = () => {
-        try { stompClient?.disconnect(); } catch (e) {}
+        try {
+            stompClient?.disconnect();
+        } catch (e) {
+        }
     };
 
     /* =========================================================
@@ -305,16 +316,16 @@
                 const isAfterPaymentPending = card.classList.contains('admin-card--accent-green');
 
                 const confirmBtn = card.querySelector('button.js-btn-confirm');
-                const cancelBtn  = card.querySelector('button.js-btn-cancel');
+                const cancelBtn = card.querySelector('button.js-btn-cancel');
 
                 if (confirmBtn) {
                     confirmBtn.classList.toggle('btn--confirm--pending', !isAfterPaymentPending);
-                    confirmBtn.classList.toggle('btn--confirm--after',   isAfterPaymentPending);
+                    confirmBtn.classList.toggle('btn--confirm--after', isAfterPaymentPending);
                 }
 
                 if (cancelBtn) {
                     cancelBtn.classList.toggle('btn--cancel--pending', !isAfterPaymentPending);
-                    cancelBtn.classList.toggle('btn--cancel--after',   isAfterPaymentPending);
+                    cancelBtn.classList.toggle('btn--cancel--after', isAfterPaymentPending);
                 }
             });
     };
@@ -327,7 +338,7 @@
         document.querySelectorAll('#serve-list .js-serve-card').forEach(updateCompleteButton);
     };
 
-    const onServeCheckChanged = (checkbox) => {
+    const onServeCheckChanged = async (checkbox) => {
         const card = checkbox?.closest('.js-serve-card');
         if (card) updateCompleteButton(card);
 
@@ -340,9 +351,19 @@
             ? `/admin/orders/${orderId}/items/${orderItemId}/serve`
             : `/admin/orders/${orderId}/items/${orderItemId}/unserve`;
 
-        fetch(endpoint, { method: 'POST' })
-            .then(res => res.json())
-            .catch(err => console.error('서빙 상태 업데이트 실패:', err));
+        try {
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: {Accept: 'application/json'},
+            });
+            if (!res.ok) {
+                const errMsg = await ApiUtils.readErrorMessage(res);
+                throw new Error(errMsg || '서빙 상태 업데이트 실패');
+            }
+        } catch (err) {
+            console.error('서빙 상태 업데이트 실패:', err);
+            showToast(err?.message || '서빙 상태 업데이트 실패');
+        }
     };
 
     const completeServeOrder = async (button) => {
@@ -356,15 +377,20 @@
         const prev = button.disabled;
         button.disabled = true;
         try {
-            const res = await fetch(url, { method: 'POST' });
-            const data = await res.json();
-
-            if (data.success && data.message) {
-                showToast(data.message);
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {Accept: 'application/json'},
+            });
+            if (!res.ok) {
+                const errMsg = await ApiUtils.readErrorMessage(res);
+                throw new Error(errMsg || '오류가 발생했습니다.');
             }
+
+            const data = await res.json();
+            if (data?.message) showToast(data.message);
         } catch (err) {
             console.error(err);
-            alert('오류가 발생했습니다: ' + (err?.message || err));
+            showToast(err?.message || '오류가 발생했습니다.');
         } finally {
             button.disabled = prev;
         }
@@ -400,7 +426,9 @@
         if (label && !cooked) {
             label.style.transition = 'background 0.3s';
             label.style.background = '#f8d7da';
-            setTimeout(() => { label.style.background = ''; }, 700);
+            setTimeout(() => {
+                label.style.background = '';
+            }, 700);
         }
 
         updateCompleteButton(orderCard);

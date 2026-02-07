@@ -73,6 +73,7 @@
 
 <script th:src="@{/js/admin-sidebar.js}"></script>
 <script th:src="@{/js/toast.js}"></script>
+<script th:src="@{/js/api.js}"></script>
 <!-- 공통 스크립트 끝 -->
 
 <script th:inline="javascript">
@@ -93,14 +94,13 @@
     /* =========================================================
     * Utils
     * ========================================================= */
-    const safeJson = (str) => {
-        try { return JSON.parse(str); } catch { return null; }
-    };
-
     const postJson = async (url) => {
-        const res = await fetch(url, {method: 'POST'});
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { Accept: 'application/json' },
+        });
         const text = await res.text();
-        const data = safeJson(text);
+        const data = ApiUtils.safeJson(text);
 
         if (!res.ok) throw new Error(data?.message || text || `HTTP ${res.status}`);
         if (!data) throw new Error('서버 응답이 올바르지 않습니다.');
@@ -221,13 +221,11 @@
             try {
                 const result = await postJson(url);
                 if (!result.success) {
-                    alert('처리 실패: ' + (result.message || 'unknown'));
-                    checkbox.checked = !isCooked;
+                    showToast(result.message || '처리 실패');                    checkbox.checked = !isCooked;
                 }
             } catch (err) {
                 console.error(err);
-                alert('오류가 발생했습니다: ' + (err?.message || err));
-                checkbox.checked = !isCooked;
+                showToast(err?.message || '오류가 발생했습니다.');                checkbox.checked = !isCooked;
             }
         });
     };
@@ -248,8 +246,7 @@
                 }
             } catch (err) {
                 console.error(err);
-                alert('오류가 발생했습니다: ' + (err?.message || err));
-            }
+                showToast(err?.message || '오류가 발생했습니다.');            }
         });
     };
 

@@ -1,6 +1,7 @@
 package lemon.qrordersystem.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lemon.qrordersystem.dto.ApiErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +24,7 @@ public class AdminExceptionHandler {
                                           RedirectAttributes redirectAttrs) {
 
         if (isAjaxRequest(request)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("success", false, "message", e.getMessage()));
+            return json(e.getErrorCode(), e.getMessage(), request);
         }
 
         redirectAttrs.addFlashAttribute("errorMessage", e.getMessage());
@@ -37,8 +37,7 @@ public class AdminExceptionHandler {
                                      RedirectAttributes redirectAttrs) {
 
         if (isAjaxRequest(request)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("success", false, "message", e.getMessage()));
+            return json(ErrorCode.BAD_REQUEST, e.getMessage(), request);
         }
 
         redirectAttrs.addFlashAttribute("errorMessage", e.getMessage());
@@ -51,8 +50,7 @@ public class AdminExceptionHandler {
                                      RedirectAttributes redirectAttrs) {
 
         if (isAjaxRequest(request)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("success", false, "message", "잘못된 요청입니다."));
+            return json(ErrorCode.BAD_REQUEST, "잘못된 요청입니다.", request);
         }
 
         redirectAttrs.addFlashAttribute("errorMessage", "잘못된 요청입니다.");
@@ -70,8 +68,7 @@ public class AdminExceptionHandler {
         }
 
         if (isAjaxRequest(request)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("success", false, "message", msg));
+            return json(ErrorCode.BAD_REQUEST, msg, request);
         }
 
         redirectAttrs.addFlashAttribute("errorMessage", msg);
@@ -87,8 +84,7 @@ public class AdminExceptionHandler {
                 safeUri(request), request.getMethod(), e);
 
         if (isAjaxRequest(request)) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("success", false, "message", "서버 오류가 발생했습니다."));
+            return json(ErrorCode.INTERNAL_ERROR, "서버 오류가 발생했습니다.", request);
         }
 
         redirectAttrs.addFlashAttribute("errorMessage", "서버 오류가 발생했습니다.");
@@ -105,6 +101,12 @@ public class AdminExceptionHandler {
         return "XMLHttpRequest".equalsIgnoreCase(xhr)
                 || (accept != null && accept.contains("application/json"));
     }
+
+    private ResponseEntity<ApiErrorResponse> json(ErrorCode errorCode, String msg, HttpServletRequest request) {
+        ApiErrorResponse body = ApiErrorResponse.of(errorCode, msg, safeUri(request));
+        return ResponseEntity.status(errorCode.getStatus()).body(body);
+    }
+
 
     private String resolveRedirectTarget(HttpServletRequest request) {
         String contextPath = request.getContextPath() == null ? "" : request.getContextPath();

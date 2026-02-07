@@ -27,10 +27,10 @@
 </div>
 
 <div class="user-callouts">
-<!--    <div class="user-callout">-->
-<!--        <i class="fa-solid fa-bullhorn user-callout__icon"></i>-->
-<!--        <span class="user-callout__text">최초 주문 시 안주를 포함하여 10,000원 이상 주문 필수입니다!</span>-->
-<!--    </div>-->
+    <!--    <div class="user-callout">-->
+    <!--        <i class="fa-solid fa-bullhorn user-callout__icon"></i>-->
+    <!--        <span class="user-callout__text">최초 주문 시 안주를 포함하여 10,000원 이상 주문 필수입니다!</span>-->
+    <!--    </div>-->
     <div class="user-callout">
         <i class="fa-solid fa-bullhorn user-callout__icon"></i>
         <span class="user-callout__text">라스트 오더는 23시입니다.</span>
@@ -329,7 +329,7 @@
             });
 
             if (!res.ok) {
-                const errMsg = await res.text().catch(() => "");
+                const errMsg = await ApiUtils.readErrorMessage(res);
                 throw new Error(errMsg || "장바구니 담기 실패");
             }
 
