@@ -86,6 +86,7 @@ public class OrderService {
         // 트랜잭션 커밋 후 WebSocket 알림
         ws.adminConfirmReload();
         ws.tableRedirect(tableId, sessionId, "/items", "주문이 시작되었습니다.");
+        ws.tableCartUpdated(tableId, cartService.buildCartSyncDto(tableId));
 
         return savedOrder;
     }
@@ -96,6 +97,11 @@ public class OrderService {
         // 1) 이미 미결제 주문이 있으면 새로 만들지 말고 그대로 반환
         return orderRepository
                 .findFirstByTable_IdAndStatusOrderByCreatedAtDesc(tableId, OrderStatus.PAYMENT_PENDING)
+                .map(order -> {
+                    ws.tableRedirect(tableId, sessionId, "/items", "주문이 시작되었습니다.");
+                    ws.tableCartUpdated(tableId, cartService.buildCartSyncDto(tableId));
+                    return order;
+                })
                 .orElseGet(() -> createOrder(tableId, sessionId));
     }
 

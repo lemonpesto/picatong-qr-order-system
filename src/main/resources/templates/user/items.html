@@ -179,6 +179,13 @@
                 if (!evt) return;
 
                 if (evt.type === "REDIRECT" && evt.data?.url) {
+                    // const targetPath = new URL(evt.data.url, window.location.origin).pathname;
+                    // if (targetPath === window.location.pathname) {
+                    //     if (evt.data?.message) {
+                    //         showToast(evt.data.message);
+                    //     }
+                    //     return;
+                    // }
                     if (evt.data?.sourceSessionId && sessionId && evt.data.sourceSessionId === sessionId) {
                         return;
                     }
